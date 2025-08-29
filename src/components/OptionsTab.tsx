@@ -48,7 +48,7 @@ export function OptionsTab({ gameId, initialSettings }: OptionsTabProps) {
                 description: 'The game has been reset to its initial state.',
             });
             router.refresh();
-        } catch (error) => {
+        } catch (error) {
             toast({ variant: 'destructive', title: 'Error', description: 'Failed to reset the game.' });
         } finally {
             setIsResetting(false);
