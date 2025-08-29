@@ -85,11 +85,6 @@ export function PaymentModal({ isOpen, setIsOpen, fromPlayer, allPlayers, gameId
       });
       
       onPaymentSuccess();
-      
-      toast({
-          title: 'Payment Successful',
-          description: `${fromPlayer.name} paid $${values.amount} to ${values.toPlayerId === 'bank' ? 'the Bank' : allPlayers.find(p => p.id === values.toPlayerId)?.name}.`
-      });
 
       setIsOpen(false);
       form.reset();

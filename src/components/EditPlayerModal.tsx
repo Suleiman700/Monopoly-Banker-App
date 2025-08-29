@@ -36,10 +36,6 @@ export function EditPlayerModal({ isOpen, setIsOpen, player, gameId, onPlayerUpd
     try {
       await updatePlayerName(player.id, gameId, values.name);
       onPlayerUpdated();
-      toast({
-          title: 'Player Updated',
-          description: `Player name changed to ${values.name}.`
-      });
       setIsOpen(false);
       form.reset({ name: values.name });
     } catch (error) {

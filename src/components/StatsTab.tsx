@@ -106,10 +106,6 @@ export function StatsTab({ initialTransactions, players, initialDiceRolls, gameI
     setUndoingTransactionId(transactionId);
     try {
       await undoTransaction(gameId, transactionId);
-      toast({
-        title: 'Transaction Undone',
-        description: 'The transaction has been successfully reversed.',
-      });
       router.refresh();
     } catch (error) {
       toast({

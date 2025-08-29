@@ -43,10 +43,6 @@ export function BankTab({ initialPlayers, initialSettings, gameId }: BankTabProp
     try {
       await passGo(player.id, gameId);
       await refreshData();
-      toast({
-        title: "Passed GO!",
-        description: `${player.name} collected $${settings.passGoAmount}.`,
-      });
     } catch (error) {
       toast({ variant: 'destructive', title: 'Error', description: (error as Error).message });
     }

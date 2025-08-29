@@ -37,16 +37,8 @@ export function MassPaymentModal({ isOpen, setIsOpen, gameId, onSuccess, type }:
     try {
       if (type === 'give') {
         await giveToAllPlayers(gameId, values.amount, values.reason);
-        toast({
-          title: 'Success!',
-          description: `Gave $${values.amount} to all players.`,
-        });
       } else {
         await takeFromAllPlayers(gameId, values.amount, values.reason);
-        toast({
-          title: 'Success!',
-          description: `Took $${values.amount} from all players.`,
-        });
       }
       onSuccess();
       setIsOpen(false);

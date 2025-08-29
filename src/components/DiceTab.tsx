@@ -63,11 +63,6 @@ export function DiceTab({ gameId }: { gameId: string }) {
     setTotal(newTotal);
     setLastRollMethod(nextMethod);
     setIsRolling(false); // Re-enable button immediately
-
-    toast({
-        title: `You rolled a ${newTotal}!`,
-        description: `(${roll1} + ${roll2})`,
-    });
     
     // Record and refresh in the background
     recordDiceRoll({
