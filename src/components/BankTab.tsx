@@ -1,14 +1,15 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import type { Player } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { MoreVertical, Landmark, ArrowUpCircle } from 'lucide-react';
+import { MoreVertical, Landmark, ArrowUpCircle, Pencil } from 'lucide-react';
 import { PaymentModal } from './PaymentModal';
 import { passGo, getPlayersByGameId } from '@/lib/db';
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from 'next/navigation';
+import { EditPlayerModal } from './EditPlayerModal';
 
 interface BankTabProps {
   initialPlayers: Player[];
@@ -18,6 +19,7 @@ interface BankTabProps {
 export function BankTab({ initialPlayers, gameId }: BankTabProps) {
   const [players, setPlayers] = useState<Player[]>(initialPlayers);
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [editPlayerModalOpen, setEditPlayerModalOpen] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
   const { toast } = useToast();
   const router = useRouter();
@@ -46,9 +48,14 @@ export function BankTab({ initialPlayers, gameId }: BankTabProps) {
     setPaymentModalOpen(true);
   };
   
-  const handlePaymentSuccess = () => {
+  const handleOpenEditPlayerModal = (player: Player) => {
+    setSelectedPlayer(player);
+    setEditPlayerModalOpen(true);
+  };
+
+  const handleSuccess = () => {
     refreshPlayers();
-    router.refresh(); // Triggers a soft refresh to update other tabs like Stats
+    router.refresh();
   };
 
   return (
@@ -81,6 +88,10 @@ export function BankTab({ initialPlayers, gameId }: BankTabProps) {
                     <ArrowUpCircle className="mr-2 h-4 w-4" />
                     <span>Pass GO ($200)</span>
                   </DropdownMenuItem>
+                   <DropdownMenuItem onSelect={() => handleOpenEditPlayerModal(player)}>
+                    <Pencil className="mr-2 h-4 w-4" />
+                    <span>Edit Player</span>
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -93,7 +104,16 @@ export function BankTab({ initialPlayers, gameId }: BankTabProps) {
             fromPlayer={selectedPlayer}
             allPlayers={players}
             gameId={gameId}
-            onPaymentSuccess={handlePaymentSuccess}
+            onPaymentSuccess={handleSuccess}
+          />
+        )}
+        {selectedPlayer && (
+          <EditPlayerModal
+            isOpen={editPlayerModalOpen}
+            setIsOpen={setEditPlayerModalOpen}
+            player={selectedPlayer}
+            gameId={gameId}
+            onPlayerUpdated={handleSuccess}
           />
         )}
       </CardContent>

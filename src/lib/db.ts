@@ -35,16 +35,16 @@ export async function getGameById(id: string): Promise<Game | undefined> {
   return Promise.resolve(games.find(g => g.id === id));
 }
 
-export async function createGame(playerCount: number, startingBalance: number): Promise<Game> {
+export async function createGame(playerNames: string[], startingBalance: number): Promise<Game> {
   const gameId = crypto.randomUUID();
   const players: Player[] = [];
-  for (let i = 1; i <= playerCount; i++) {
-    players.push({ id: crypto.randomUUID(), name: `Player ${i}`, balance: startingBalance, gameId });
+  for (const name of playerNames) {
+    players.push({ id: crypto.randomUUID(), name, balance: startingBalance, gameId });
   }
 
   const newGame: Game = {
     id: gameId,
-    playerCount,
+    playerCount: players.length,
     startingBalance,
     createdAt: new Date(),
     players,
@@ -60,6 +60,18 @@ export async function createGame(playerCount: number, startingBalance: number): 
 export async function getPlayersByGameId(gameId: string): Promise<Player[]> {
   const game = await getGameById(gameId);
   return Promise.resolve(game ? game.players : []);
+}
+
+export async function updatePlayerName(playerId: string, gameId: string, newName: string): Promise<Player> {
+    const game = await getGameById(gameId);
+    if (!game) throw new Error('Game not found');
+
+    const player = game.players.find(p => p.id === playerId);
+    if (!player) throw new Error('Player not found');
+
+    player.name = newName;
+
+    return Promise.resolve(player);
 }
 
 export async function makePayment(details: {
