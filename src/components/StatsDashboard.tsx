@@ -49,11 +49,17 @@ export function StatsDashboard({ initialTransactions, players, gameId, initialDi
 
   const keyMetrics = useMemo(() => {
     const totalMoneyExchanged = transactions.reduce((sum, t) => sum + t.amount, 0);
-    const passGoCount = transactions.filter(t => t.reason === 'Passed GO').length;
-    const jailPayments = transactions.filter(t => t.reason === 'Jail Fee').reduce((sum, t) => sum + t.amount, 0);
+    const passGoTransactions = transactions.filter(t => t.reason === 'Passed GO');
+    const passGoCount = passGoTransactions.length;
+    const passGoAmount = passGoTransactions.reduce((sum, t) => sum + t.amount, 0);
+
+    const jailFeeTransactions = transactions.filter(t => t.reason === 'Jail Fee');
+    const jailFeeCount = jailFeeTransactions.length;
+    const jailFeeAmount = jailFeeTransactions.reduce((sum, t) => sum + t.amount, 0);
+
     const totalRounds = diceRolls.length;
 
-    return { totalMoneyExchanged, passGoCount, jailPayments, totalRounds };
+    return { totalMoneyExchanged, passGoCount, passGoAmount, jailFeeCount, jailFeeAmount, totalRounds };
   }, [transactions, diceRolls]);
 
   const playerBalanceTimeline = useMemo(() => {
@@ -145,12 +151,18 @@ export function StatsDashboard({ initialTransactions, players, gameId, initialDi
           <CardContent><p className="text-3xl font-bold">${keyMetrics.totalMoneyExchanged.toLocaleString()}</p></CardContent>
         </Card>
         <Card>
-          <CardHeader><CardTitle className="flex items-center gap-2"><PiggyBank />"Pass Go" Count</CardTitle></CardHeader>
-          <CardContent><p className="text-3xl font-bold">{keyMetrics.passGoCount}</p></CardContent>
+          <CardHeader><CardTitle className="flex items-center gap-2"><PiggyBank />"Pass Go" Payments</CardTitle></CardHeader>
+           <CardContent>
+             <p className="text-3xl font-bold">${keyMetrics.passGoAmount.toLocaleString()}</p>
+             <p className="text-sm text-muted-foreground">{keyMetrics.passGoCount} times</p>
+            </CardContent>
         </Card>
         <Card>
-          <CardHeader><CardTitle className="flex items-center gap-2"><Landmark />Jail Payments</CardTitle></CardHeader>
-          <CardContent><p className="text-3xl font-bold">${keyMetrics.jailPayments.toLocaleString()}</p></CardContent>
+          <CardHeader><CardTitle className="flex items-center gap-2"><Landmark />Jail Fees Paid</CardTitle></CardHeader>
+          <CardContent>
+             <p className="text-3xl font-bold">${keyMetrics.jailFeeAmount.toLocaleString()}</p>
+             <p className="text-sm text-muted-foreground">{keyMetrics.jailFeeCount} times</p>
+          </CardContent>
         </Card>
       </div>
 
