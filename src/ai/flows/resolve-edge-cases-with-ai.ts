@@ -18,6 +18,7 @@ const ResolveEdgeCaseInputSchema = z.object({
 export type ResolveEdgeCaseInput = z.infer<typeof ResolveEdgeCaseInputSchema>;
 
 const ResolveEdgeCaseOutputSchema = z.object({
+  title: z.string().describe('A short, catchy title for the ruling, in the same language as the user\'s query.'),
   resolution: z.string().describe('The AI-resolved solution to the game scenario based on Monopoly rules.'),
   reasoning: z.string().describe('The AI reasoning behind the provided resolution, referencing specific Monopoly rules.'),
 });
@@ -31,11 +32,17 @@ const prompt = ai.definePrompt({
   name: 'resolveEdgeCasePrompt',
   input: {schema: ResolveEdgeCaseInputSchema},
   output: {schema: ResolveEdgeCaseOutputSchema},
-  prompt: `You are an expert in Monopoly rules and regulations. A player will describe an ambiguous scenario that has occurred during their game. Your job is to provide a resolution to the scenario, according to official Monopoly rules.
+  prompt: `You are an expert in Monopoly rules and regulations. A player will describe an ambiguous scenario that has occurred during their game. 
+Your primary task is to detect the language of the user's query and respond entirely in that same language.
+
+Your job is to provide a ruling based on official Monopoly rules. You must generate:
+1. A short, catchy title for the ruling.
+2. A clear resolution to the scenario.
+3. An explanation for the reasoning behind it, referencing specific rules where applicable.
 
 Scenario: {{{gameScenario}}}
 
-Provide a clear resolution and explain the reasoning behind it, referencing specific rules where applicable.`,
+Remember: Your entire output (title, resolution, and reasoning) must be in the same language as the scenario description.`,
 });
 
 const resolveEdgeCaseFlow = ai.defineFlow(

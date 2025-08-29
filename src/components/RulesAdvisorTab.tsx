@@ -4,12 +4,13 @@ import { resolveEdgeCase, type ResolveEdgeCaseOutput } from '@/ai/flows/resolve-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Lightbulb, Loader2 } from 'lucide-react';
+import { Lightbulb, Loader2, Sparkles } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 export function RulesAdvisorTab() {
   const [scenario, setScenario] = useState('');
-  const [result, setResult] = useState<ResolveEdgeCaseOutput | null>(null);
+  const [results, setResults] = useState<ResolveEdgeCaseOutput[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -20,11 +21,11 @@ export function RulesAdvisorTab() {
     }
     setError(null);
     setIsLoading(true);
-    setResult(null);
 
     try {
       const response = await resolveEdgeCase({ gameScenario: scenario });
-      setResult(response);
+      setResults(prevResults => [response, ...prevResults]);
+      setScenario('');
     } catch (e) {
       setError('Failed to get advice. The AI may be unavailable. Please try again later.');
       console.error(e);
@@ -38,7 +39,7 @@ export function RulesAdvisorTab() {
       <CardHeader>
         <CardTitle className="font-headline">Game Rules Advisor</CardTitle>
         <CardDescription>
-          Have a tricky situation? Describe it below and our AI expert will provide a ruling based on official Monopoly rules.
+          Have a tricky situation? Describe it below (in any language) and our AI expert will provide a ruling based on official Monopoly rules.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -58,22 +59,29 @@ export function RulesAdvisorTab() {
           Get Advice
         </Button>
 
-        {result && (
-          <Card className="bg-secondary/50 mt-6 animate-in fade-in">
-            <CardHeader>
-              <CardTitle className="font-headline text-primary">AI Ruling</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <h3 className="font-semibold text-lg">Resolution:</h3>
-                <p className="text-foreground/90">{result.resolution}</p>
-              </div>
-              <div className="pt-2">
-                <h3 className="font-semibold text-lg">Reasoning:</h3>
-                <p className="whitespace-pre-wrap text-foreground/90 font-sans">{result.reasoning}</p>
-              </div>
-            </CardContent>
-          </Card>
+        {results.length > 0 && (
+          <div className="pt-6 space-y-4">
+             <h3 className="font-headline text-xl text-primary flex items-center gap-2"><Sparkles className="h-5 w-5 text-accent"/> AI Rulings</h3>
+             <Accordion type="single" collapsible className="w-full">
+                {results.map((result, index) => (
+                    <AccordionItem value={`item-${index}`} key={index}>
+                        <AccordionTrigger className="font-headline text-lg hover:no-underline">{result.title}</AccordionTrigger>
+                        <AccordionContent>
+                           <div className="space-y-4 pt-2">
+                              <div>
+                                <h4 className="font-semibold text-base">Resolution:</h4>
+                                <p className="text-foreground/90">{result.resolution}</p>
+                              </div>
+                              <div className="pt-2">
+                                <h4 className="font-semibold text-base">Reasoning:</h4>
+                                <p className="whitespace-pre-wrap text-foreground/90 font-sans">{result.reasoning}</p>
+                              </div>
+                            </div>
+                        </AccordionContent>
+                    </AccordionItem>
+                ))}
+            </Accordion>
+          </div>
         )}
       </CardContent>
     </Card>
