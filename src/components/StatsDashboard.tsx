@@ -1,4 +1,5 @@
 
+
 'use client';
 import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -64,44 +65,6 @@ export function StatsDashboard({ initialTransactions, players, gameId, initialDi
 
     return { totalMoneyExchanged, passGoCount, passGoAmount, jailFeeCount, jailFeeAmount, totalRounds };
   }, [transactions, diceRolls]);
-
-  const playerBalanceTimeline = useMemo(() => {
-    const chartPlayerConfig: any = {};
-    const playerColors: { [playerName: string]: string } = {};
-    players.forEach((p, i) => {
-        const color = `hsl(var(--chart-${(i % 5) + 1}))`;
-        chartPlayerConfig[p.name] = { label: p.name, color };
-        playerColors[p.name] = color;
-    });
-
-    const timeline: { transaction: number, [playerName: string]: number }[] = [];
-    const initialBalances: { [playerName: string]: number } = {};
-    players.forEach(p => {
-        initialBalances[p.name] = settings.startingBalance;
-    });
-    timeline.push({ transaction: 0, ...initialBalances });
-
-    const sortedTransactions = [...transactions].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
-
-    sortedTransactions.forEach((t, i) => {
-        const prevBalances = { ...timeline[timeline.length - 1] };
-        
-        const fromPlayer = players.find(p => p.id === t.fromPlayerId);
-        const toPlayer = players.find(p => p.id === t.toPlayerId);
-
-        if (fromPlayer) {
-            prevBalances[fromPlayer.name] -= t.amount;
-        }
-        if (toPlayer) {
-            prevBalances[toPlayer.name] += t.amount;
-        }
-
-        prevBalances.transaction = i + 1;
-        timeline.push(prevBalances);
-    });
-
-    return { data: timeline, config: chartPlayerConfig, colors: playerColors };
-  }, [players, transactions, settings.startingBalance]);
 
   const incomeOutcomeData = useMemo(() => {
     return players.map(player => {
@@ -174,24 +137,6 @@ export function StatsDashboard({ initialTransactions, players, gameId, initialDi
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-         <Card>
-          <CardHeader><CardTitle>Player Balance Timeline</CardTitle><CardDescription>How player wealth has changed over time.</CardDescription></CardHeader>
-          <CardContent>
-            <ChartContainer config={playerBalanceTimeline.config} className="h-[300px] w-full">
-              <ResponsiveContainer>
-                <LineChart data={playerBalanceTimeline.data}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="transaction" type="number" allowDecimals={false} />
-                  <YAxis tickFormatter={(value) => `$${value/1000}k`} />
-                  <Tooltip content={<ChartTooltipContent indicator="dot" />} />
-                  <Legend />
-                  {players.map(p => <Line key={p.id} type="monotone" dataKey={p.name} stroke={playerBalanceTimeline.colors[p.name]} dot={false} />)}
-                </LineChart>
-              </ResponsiveContainer>
-            </ChartContainer>
-          </CardContent>
-        </Card>
-
         <Card>
           <CardHeader><CardTitle>Player Income vs. Outcome</CardTitle><CardDescription>Total money received vs. money spent.</CardDescription></CardHeader>
           <CardContent>
@@ -210,25 +155,25 @@ export function StatsDashboard({ initialTransactions, players, gameId, initialDi
             </ChartContainer>
           </CardContent>
         </Card>
-      </div>
 
-       <Card>
-        <CardHeader><CardTitle>Dice Roll Frequency</CardTitle><CardDescription>How many times each total has been rolled.</CardDescription></CardHeader>
-        <CardContent>
-          <ChartContainer config={diceRollConfig} className="h-[300px] w-full">
-            <ResponsiveContainer>
-              <BarChart data={diceRollFrequency}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis allowDecimals={false} />
-                <Tooltip content={<ChartTooltipContent indicator="dot" />} />
-                <Legend />
-                <Bar dataKey="rolls" fill="var(--color-rolls)" radius={4} />
-              </BarChart>
-            </ResponsiveContainer>
-          </ChartContainer>
-        </CardContent>
-      </Card>
+         <Card>
+          <CardHeader><CardTitle>Dice Roll Frequency</CardTitle><CardDescription>How many times each total has been rolled.</CardDescription></CardHeader>
+          <CardContent>
+            <ChartContainer config={diceRollConfig} className="h-[300px] w-full">
+              <ResponsiveContainer>
+                <BarChart data={diceRollFrequency}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis allowDecimals={false} />
+                  <Tooltip content={<ChartTooltipContent indicator="dot" />} />
+                  <Legend />
+                  <Bar dataKey="rolls" fill="var(--color-rolls)" radius={4} />
+                </BarChart>
+              </ResponsiveContainer>
+            </ChartContainer>
+          </CardContent>
+        </Card>
+      </div>
 
       <Card>
         <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -275,6 +220,3 @@ export function StatsDashboard({ initialTransactions, players, gameId, initialDi
     </div>
   );
 }
-
-    
-    
