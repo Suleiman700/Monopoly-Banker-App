@@ -53,7 +53,7 @@ export async function createGame(playerNames: string[], startingBalance: number)
   };
 
   // Simulates: INSERT INTO games (...);
-  games.push(newGame);
+  games.unshift(newGame);
   return Promise.resolve(newGame);
 }
 
