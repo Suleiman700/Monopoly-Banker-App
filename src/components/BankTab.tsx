@@ -4,7 +4,7 @@ import type { Player } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { MoreVertical, Landmark, ArrowUpCircle, Pencil, ArrowDownCircle, Banknotes, PiggyBank } from 'lucide-react';
+import { MoreVertical, Landmark, ArrowUpCircle, Pencil, Banknote, PiggyBank } from 'lucide-react';
 import { PaymentModal } from './PaymentModal';
 import { passGo, getPlayersByGameId } from '@/lib/db';
 import { useToast } from "@/hooks/use-toast";
@@ -137,7 +137,7 @@ export function BankTab({ initialPlayers, gameId }: BankTabProps) {
             <PiggyBank className="mr-2"/> Give To All Players...
         </Button>
         <Button variant="outline" onClick={() => handleOpenMassPaymentModal('take')}>
-            <Banknotes className="mr-2"/> Take From All Players...
+            <Banknote className="mr-2"/> Take From All Players...
         </Button>
       </CardFooter>
     </Card>
