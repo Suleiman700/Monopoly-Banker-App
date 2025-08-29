@@ -1,7 +1,7 @@
 'use client';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import type { Transaction, Player, DiceRoll } from '@/lib/types';
+import type { Transaction, Player, DiceRoll, Game } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -20,10 +20,20 @@ interface StatsTabProps {
 }
 
 export function StatsTab({ initialTransactions, players, initialDiceRolls, gameId }: StatsTabProps) {
+  const [transactions, setTransactions] = useState(initialTransactions);
+  const [diceRolls, setDiceRolls] = useState(initialDiceRolls);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string>('all');
   const [undoingTransactionId, setUndoingTransactionId] = useState<string | null>(null);
   const router = useRouter();
   const { toast } = useToast();
+
+  useEffect(() => {
+    setTransactions(initialTransactions);
+  }, [initialTransactions]);
+
+  useEffect(() => {
+    setDiceRolls(initialDiceRolls);
+  }, [initialDiceRolls]);
 
   const chartConfig = useMemo(() => {
     const config = {
@@ -40,34 +50,31 @@ export function StatsTab({ initialTransactions, players, initialDiceRolls, gameI
 
   const filteredData = useMemo(() => {
     const isPlayerSpecific = selectedPlayerId !== 'all';
-    const player = isPlayerSpecific ? players.find(p => p.id === selectedPlayerId) : null;
-    const game = { players, transactions: initialTransactions, diceRolls: initialDiceRolls };
-
-    const transactions = isPlayerSpecific
-      ? initialTransactions.filter(t => t.fromPlayerId === selectedPlayerId || t.toPlayerId === selectedPlayerId)
-      : initialTransactions;
+    
+    const filteredTransactions = isPlayerSpecific
+      ? transactions.filter(t => t.fromPlayerId === selectedPlayerId || t.toPlayerId === selectedPlayerId)
+      : transactions;
 
     const passGoCount = transactions.filter(t => t.reason.toLowerCase().includes('go')).length;
     const jailCount = transactions.filter(t => t.reason.toLowerCase().includes('jail')).length;
 
     const incomeOutcome = players.map(p => {
-        const income = initialTransactions
+        const income = transactions
             .filter(t => t.toPlayerId === p.id)
             .reduce((sum, t) => sum + t.amount, 0);
-        const outcome = initialTransactions
+        const outcome = transactions
             .filter(t => t.fromPlayerId === p.id)
             .reduce((sum, t) => sum + t.amount, 0);
         return { name: p.name, income, outcome };
-    }).filter(d => isPlayerSpecific ? d.name === player?.name : true);
+    });
 
-
-    const startingBalance = game.players[0]?.balance ? (initialTransactions.length > 0 ? game.players[0].balance + incomeOutcome.reduce((acc, p) => acc + p.outcome, 0) - incomeOutcome.reduce((acc, p) => acc + p.income, 0) : game.players[0].balance) : 1500;
+    const startingBalance = players[0]?.balance ? (transactions.length > 0 ? players[0].balance + incomeOutcome.reduce((acc, p) => acc + p.outcome, 0) - incomeOutcome.reduce((acc, p) => acc + p.income, 0) : players[0].balance) : 1500;
     
     const balanceHistory = (() => {
         const history: any[] = [{ transactionIndex: 0 }];
         players.forEach(p => history[0][p.id] = startingBalance);
 
-        initialTransactions
+        transactions
             .slice()
             .sort((a,b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
             .forEach((t, index) => {
@@ -91,7 +98,7 @@ export function StatsTab({ initialTransactions, players, initialDiceRolls, gameI
         for (let i = 2; i <= 12; i++) {
             counts.set(i, 0);
         }
-        initialDiceRolls.forEach(roll => {
+        diceRolls.forEach(roll => {
             counts.set(roll.total, (counts.get(roll.total) || 0) + 1);
         });
         return Array.from(counts.entries()).map(([total, count]) => ({ name: total.toString(), rolls: count }));
@@ -103,11 +110,11 @@ export function StatsTab({ initialTransactions, players, initialDiceRolls, gameI
         incomeOutcome,
         balanceHistory,
         diceRollFrequency,
-        filteredTransactions: transactions.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
-        totalMoneySpent: initialTransactions.reduce((sum, t) => sum + t.amount, 0),
-        numberOfRounds: players.length > 0 ? Math.floor(initialDiceRolls.length / players.length) : 0,
+        filteredTransactions: filteredTransactions.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
+        totalMoneySpent: transactions.reduce((sum, t) => sum + t.amount, 0),
+        numberOfRounds: players.length > 0 ? Math.floor(diceRolls.length / players.length) : 0,
     };
-  }, [selectedPlayerId, initialTransactions, initialDiceRolls, players]);
+  }, [selectedPlayerId, transactions, diceRolls, players]);
 
   
   const getPlayerName = (id: string | 'bank') => {

@@ -7,7 +7,7 @@ import { StatsTab } from '@/components/StatsTab';
 import { RulesAdvisorTab } from '@/components/RulesAdvisorTab';
 import { OptionsTab } from '@/components/OptionsTab';
 import { getGameById } from '@/lib/db';
-import { Banknote, Dices, BarChart3, HelpCircle, Settings, ArrowRightLeft } from 'lucide-react';
+import { Banknote, Dices, BarChart3, HelpCircle, Settings, ArrowRightLeft, BarChart4 } from 'lucide-react';
 import type { ThemeColors } from '@/lib/types';
 import { TradeTab } from '@/components/TradeTab';
 
@@ -53,11 +53,12 @@ export default async function GamePage({ params }: GamePageProps) {
               <p className="text-muted-foreground font-code text-sm">ID: {game.id}</p>
           </div>
           <Tabs defaultValue="bank" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 md:grid-cols-6 h-auto">
+            <TabsList className="grid w-full grid-cols-3 md:grid-cols-7 h-auto">
               <TabsTrigger value="bank" className="py-2"><Banknote className="mr-2 h-5 w-5" />Bank</TabsTrigger>
               <TabsTrigger value="trade" className="py-2"><ArrowRightLeft className="mr-2 h-5 w-5" />Trade</TabsTrigger>
               <TabsTrigger value="dice" className="py-2"><Dices className="mr-2 h-5 w-5" />Dice</TabsTrigger>
               <TabsTrigger value="stats" className="py-2"><BarChart3 className="mr-2 h-5 w-5" />Stats</TabsTrigger>
+              <TabsTrigger value="stats2" className="py-2"><BarChart4 className="mr-2 h-5 w-5" />Stats 2</TabsTrigger>
               <TabsTrigger value="advisor" className="py-2"><HelpCircle className="mr-2 h-5 w-5" />Rules Advisor</TabsTrigger>
               <TabsTrigger value="options" className="py-2"><Settings className="mr-2 h-5 w-5" />Options</TabsTrigger>
             </TabsList>
@@ -71,6 +72,9 @@ export default async function GamePage({ params }: GamePageProps) {
               <DiceTab gameId={gameId} settings={settings} />
             </TabsContent>
             <TabsContent value="stats" className="mt-6">
+              <StatsTab initialTransactions={transactions} players={players} initialDiceRolls={diceRolls} gameId={gameId} />
+            </TabsContent>
+            <TabsContent value="stats2" className="mt-6">
               <StatsTab initialTransactions={transactions} players={players} initialDiceRolls={diceRolls} gameId={gameId} />
             </TabsContent>
             <TabsContent value="advisor" className="mt-6">
