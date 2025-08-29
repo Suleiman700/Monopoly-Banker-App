@@ -15,6 +15,10 @@ interface AIForecasterTabProps {
 
 const COLORS = ["hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))", "hsl(var(--chart-5))", "hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--chart-3))"];
 
+const renderLegend = () => {
+    return <p className="text-center text-sm text-muted-foreground mt-2">Win Probability</p>;
+};
+
 export function AIForecasterTab({ gameData }: AIForecasterTabProps) {
   const [result, setResult] = useState<PredictWinnerOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -111,7 +115,7 @@ export function AIForecasterTab({ gameData }: AIForecasterTabProps) {
                       <Cell key={`cell-${index}`} fill={entry.fill} />
                     ))}
                   </Pie>
-                  <Legend content={<p className="text-center text-sm text-muted-foreground mt-2">Win Probability</p>} />
+                  <Legend content={renderLegend} />
                 </PieChart>
               </ResponsiveContainer>
              </div>
