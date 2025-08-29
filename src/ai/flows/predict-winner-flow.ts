@@ -18,14 +18,14 @@ const PlayerPredictionSchema = z.object({
   reasoning: z.string().describe('A brief explanation for why this probability was assigned, based on game state.')
 });
 
-export const PredictWinnerInputSchema = z.object({
+const PredictWinnerInputSchema = z.object({
   players: z.any().describe('An array of player objects, including their current balance.'),
   transactions: z.any().describe('The history of all transactions in the game.'),
   diceRolls: z.any().describe('The history of all dice rolls in the game.'),
 });
 export type PredictWinnerInput = z.infer<typeof PredictWinnerInputSchema>;
 
-export const PredictWinnerOutputSchema = z.object({
+const PredictWinnerOutputSchema = z.object({
   predictions: z.array(PlayerPredictionSchema).describe('An array of win probability predictions for each player.'),
 });
 export type PredictWinnerOutput = z.infer<typeof PredictWinnerOutputSchema>;
