@@ -11,6 +11,8 @@ import { ChartConfig, ChartContainer, ChartTooltipContent } from '@/components/u
 
 interface AIForecasterTabProps {
   gameData: Game;
+  result: PredictWinnerOutput | null;
+  setResult: (result: PredictWinnerOutput | null) => void;
 }
 
 const COLORS = ["hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))", "hsl(var(--chart-5))", "hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--chart-3))"];
@@ -19,8 +21,7 @@ const renderLegend = () => {
     return <p className="text-center text-sm text-muted-foreground mt-2">Win Probability</p>;
 };
 
-export function AIForecasterTab({ gameData }: AIForecasterTabProps) {
-  const [result, setResult] = useState<PredictWinnerOutput | null>(null);
+export function AIForecasterTab({ gameData, result, setResult }: AIForecasterTabProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
