@@ -1,3 +1,4 @@
+
 'use client';
 import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -32,6 +33,7 @@ const diceRollConfig = {
 export function StatsDashboard({ initialTransactions, players, gameId, initialDiceRolls, initialSettings }: StatsDashboardProps) {
   const [transactions, setTransactions] = useState(initialTransactions);
   const [diceRolls, setDiceRolls] = useState(initialDiceRolls);
+  const [settings, setSettings] = useState(initialSettings);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string>('all');
   const [undoingTransactionId, setUndoingTransactionId] = useState<string | null>(null);
   const router = useRouter();
@@ -40,7 +42,8 @@ export function StatsDashboard({ initialTransactions, players, gameId, initialDi
   useEffect(() => {
     setTransactions(initialTransactions);
     setDiceRolls(initialDiceRolls);
-  }, [initialTransactions, initialDiceRolls]);
+    setSettings(initialSettings);
+  }, [initialTransactions, initialDiceRolls, initialSettings]);
 
   const getPlayerName = (id: string | 'bank') => {
     if (id === 'bank') return 'Bank';
@@ -67,27 +70,23 @@ export function StatsDashboard({ initialTransactions, players, gameId, initialDi
     const playerBalances: { [playerId: string]: number } = {};
     const playerColors: { [playerName: string]: string } = {};
     const chartPlayerConfig: any = {};
-  
-    // Initialize balances and chart config for all players first
+
     players.forEach((p, i) => {
-      playerBalances[p.id] = initialSettings.startingBalance;
+      playerBalances[p.id] = settings.startingBalance;
       const color = `hsl(var(--chart-${(i % 5) + 1}))`;
       playerColors[p.name] = color;
       chartPlayerConfig[p.name] = { label: p.name, color };
     });
   
-    // Set the initial state at transaction 0
     const initialBalances = players.reduce((acc, p) => ({ ...acc, [p.name]: playerBalances[p.id] }), {});
     timeline.push({
       transaction: 0,
       ...initialBalances
     });
     
-    // Process transactions chronologically
     const sortedTransactions = [...transactions].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
 
     sortedTransactions.forEach((t, i) => {
-        // These balances are guaranteed to exist from the initialization loop
         if (t.fromPlayerId !== 'bank') {
             playerBalances[t.fromPlayerId] -= t.amount;
         }
@@ -103,7 +102,7 @@ export function StatsDashboard({ initialTransactions, players, gameId, initialDi
     });
 
     return { data: timeline, config: chartPlayerConfig, colors: playerColors };
-  }, [players, transactions, initialSettings.startingBalance]);
+  }, [players, transactions, settings.startingBalance]);
 
   const incomeOutcomeData = useMemo(() => {
     return players.map(player => {
@@ -277,3 +276,5 @@ export function StatsDashboard({ initialTransactions, players, gameId, initialDi
     </div>
   );
 }
+
+    
