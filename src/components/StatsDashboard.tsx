@@ -68,11 +68,11 @@ export function StatsDashboard({ initialTransactions, players, initialDiceRolls,
         return { name: p.name, income, outcome };
     });
 
-    const startingBalance = gameId && players.length > 0 && transactions.length > 0 ? transactions[0].amount : 1500;
+    const startingBalance = gameId && players.length > 0 && initialTransactions.length > 0 && gameId === initialTransactions[0].gameId ? players[0].balance + initialTransactions.filter(t=>t.toPlayerId === players[0].id || t.fromPlayerId === players[0].id).reduce((acc, t) => acc + (t.fromPlayerId === players[0].id ? t.amount : -t.amount), 0) : 1500;
     
     const balanceHistory = (() => {
         const history: any[] = [{ transactionIndex: 0 }];
-        players.forEach(p => history[0][p.id] = startingBalance);
+        players.forEach(p => history[0][p.id] = p.balance + transactions.filter(t => t.toPlayerId === p.id || t.fromPlayerId === p.id).reduce((acc,t) => acc + (t.fromPlayerId === p.id ? t.amount: -t.amount), 0) );
 
         transactions
             .slice()
@@ -116,7 +116,7 @@ export function StatsDashboard({ initialTransactions, players, initialDiceRolls,
         totalMoneySpent: transactions.filter(t => t.fromPlayerId !== 'bank').reduce((sum, t) => sum + t.amount, 0),
         numberOfRounds: players.length > 0 ? Math.floor(diceRolls.length / players.length) : 0,
     };
-  }, [selectedPlayerId, transactions, diceRolls, players, gameId]);
+  }, [selectedPlayerId, transactions, diceRolls, players, gameId, initialTransactions]);
 
   
   const getPlayerName = (id: string | 'bank') => {
@@ -280,7 +280,7 @@ export function StatsDashboard({ initialTransactions, players, initialDiceRolls,
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredTransactions.length > 0 ? filteredTransactions.map(t => (
+                {filteredData.filteredTransactions.length > 0 ? filteredData.filteredTransactions.map(t => (
                   <TableRow key={t.id}>
                     <TableCell className="font-medium">{getPlayerName(t.fromPlayerId)}</TableCell>
                     <TableCell className="font-medium">{getPlayerName(t.toPlayerId)}</TableCell>
