@@ -366,3 +366,68 @@ export async function updateGameSettings(gameId: string, newSettings: Partial<Ga
   await writeGame(game);
   return game;
 }
+
+export async function executeTrade(details: {
+  gameId: string;
+  player1Id: string;
+  player2Id: string;
+  player1Amount: number;
+  player2Amount: number;
+  reason: string;
+}): Promise<void> {
+  const { gameId, player1Id, player2Id, player1Amount, player2Amount, reason } = details;
+
+  if (player1Id === player2Id) {
+    throw new Error('Players in a trade cannot be the same.');
+  }
+
+  const game = await getGameById(gameId);
+  if (!game) throw new Error('Game not found');
+
+  const player1 = game.players.find(p => p.id === player1Id);
+  if (!player1) throw new Error('Player 1 not found');
+
+  const player2 = game.players.find(p => p.id === player2Id);
+  if (!player2) throw new Error('Player 2 not found');
+
+  if (player1.balance < player1Amount) {
+    throw new Error(`${player1.name} has insufficient funds for this trade.`);
+  }
+  if (player2.balance < player2Amount) {
+    throw new Error(`${player2.name} has insufficient funds for this trade.`);
+  }
+
+  // Perform the balance changes
+  player1.balance = player1.balance - player1Amount + player2Amount;
+  player2.balance = player2.balance - player2Amount + player1Amount;
+
+  // Record the transaction for Player 1 giving money
+  if (player1Amount > 0) {
+    const t1: Transaction = {
+      id: crypto.randomUUID(),
+      gameId,
+      fromPlayerId: player1.id,
+      toPlayerId: player2.id,
+      amount: player1Amount,
+      reason: `Trade: ${reason}`,
+      createdAt: new Date(),
+    };
+    game.transactions.push(t1);
+  }
+
+  // Record the transaction for Player 2 giving money
+  if (player2Amount > 0) {
+    const t2: Transaction = {
+      id: crypto.randomUUID(),
+      gameId,
+      fromPlayerId: player2.id,
+      toPlayerId: player1.id,
+      amount: player2Amount,
+      reason: `Trade: ${reason}`,
+      createdAt: new Date(),
+    };
+    game.transactions.push(t2);
+  }
+  
+  await writeGame(game);
+}
