@@ -1,10 +1,15 @@
 'use client';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import type { Transaction, Player, DiceRoll } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from './ui/scroll-area';
+import { Button } from './ui/button';
+import { Undo, Loader2 } from 'lucide-react';
+import { undoTransaction } from '@/lib/db';
+import { useToast } from "@/hooks/use-toast";
 
 interface StatsTabProps {
   initialTransactions: Transaction[];
@@ -15,6 +20,9 @@ interface StatsTabProps {
 
 export function StatsTab({ initialTransactions, players, initialDiceRolls }: StatsTabProps) {
   const [selectedPlayerId, setSelectedPlayerId] = useState<string>('all');
+  const [undoingTransactionId, setUndoingTransactionId] = useState<string | null>(null);
+  const router = useRouter();
+  const { toast } = useToast();
   
   const totalMoneySpent = initialTransactions.reduce((sum, t) => sum + t.amount, 0);
   const numberOfRounds = players.length > 0 ? Math.floor(initialDiceRolls.length / players.length) : 0;
@@ -28,6 +36,27 @@ export function StatsTab({ initialTransactions, players, initialDiceRolls }: Sta
     if (id === 'bank') return 'Bank';
     return players.find(p => p.id === id)?.name || 'Unknown';
   };
+
+  const handleUndo = async (transactionId: string) => {
+    setUndoingTransactionId(transactionId);
+    try {
+      await undoTransaction(gameId, transactionId);
+      toast({
+        title: 'Transaction Undone',
+        description: 'The transaction has been successfully reversed.',
+      });
+      router.refresh(); // This will re-fetch data on the server and update the component
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Undo Failed',
+        description: (error as Error).message
+      });
+    } finally {
+      setUndoingTransactionId(null);
+    }
+  };
+
 
   return (
     <div className="space-y-6">
@@ -79,7 +108,8 @@ export function StatsTab({ initialTransactions, players, initialDiceRolls }: Sta
                   <TableHead>To</TableHead>
                   <TableHead className="text-right">Amount</TableHead>
                   <TableHead>Reason</TableHead>
-                  <TableHead className="text-right">Time</TableHead>
+                  <TableHead>Time</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -90,10 +120,25 @@ export function StatsTab({ initialTransactions, players, initialDiceRolls }: Sta
                     <TableCell className="text-right">${t.amount.toLocaleString()}</TableCell>
                     <TableCell className="text-muted-foreground">{t.reason}</TableCell>
                     <TableCell className="text-right text-muted-foreground">{new Date(t.createdAt).toLocaleTimeString()}</TableCell>
+                    <TableCell className="text-right">
+                       <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleUndo(t.id)}
+                        disabled={undoingTransactionId === t.id}
+                      >
+                        {undoingTransactionId === t.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Undo className="h-4 w-4" />
+                        )}
+                        <span className="sr-only">Undo</span>
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 )) : (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center h-24">No transactions to display.</TableCell>
+                    <TableCell colSpan={6} className="text-center h-24">No transactions to display.</TableCell>
                   </TableRow>
                 )}
               </TableBody>

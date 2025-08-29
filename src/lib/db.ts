@@ -300,3 +300,30 @@ export async function takeFromAllPlayers(gameId: string, amount: number, reason:
 
     await writeGame(game);
 }
+
+export async function undoTransaction(gameId: string, transactionId: string): Promise<void> {
+    const game = await getGameById(gameId);
+    if (!game) throw new Error('Game not found');
+
+    const transactionIndex = game.transactions.findIndex(t => t.id === transactionId);
+    if (transactionIndex === -1) throw new Error('Transaction not found');
+
+    const transaction = game.transactions[transactionIndex];
+    const { fromPlayerId, toPlayerId, amount } = transaction;
+
+    // Reverse the balance changes
+    const fromPlayer = fromPlayerId === 'bank' ? null : game.players.find(p => p.id === fromPlayerId);
+    const toPlayer = toPlayerId === 'bank' ? null : game.players.find(p => p.id === toPlayerId);
+
+    if (fromPlayer) {
+        fromPlayer.balance += amount;
+    }
+    if (toPlayer) {
+        toPlayer.balance -= amount;
+    }
+    
+    // Remove the transaction
+    game.transactions.splice(transactionIndex, 1);
+
+    await writeGame(game);
+}
