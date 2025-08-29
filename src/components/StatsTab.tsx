@@ -18,7 +18,7 @@ interface StatsTabProps {
   gameId: string;
 }
 
-export function StatsTab({ initialTransactions, players, initialDiceRolls }: StatsTabProps) {
+export function StatsTab({ initialTransactions, players, initialDiceRolls, gameId }: StatsTabProps) {
   const [selectedPlayerId, setSelectedPlayerId] = useState<string>('all');
   const [undoingTransactionId, setUndoingTransactionId] = useState<string | null>(null);
   const router = useRouter();
