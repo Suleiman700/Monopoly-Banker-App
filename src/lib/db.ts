@@ -1,45 +1,86 @@
 'use server';
 
-import type { Game, Player, Transaction, DiceRoll } from './types';
+import {promises as fs} from 'fs';
+import path from 'path';
+import type {Game, Player, Transaction, DiceRoll} from './types';
 
-// In-memory store
-const games: Game[] = [];
+const gamesDir = path.join(process.cwd(), 'games');
 
-// --- MOCK DATA ---
-const initialGameId = 'c1a7b8e8-4c3d-4e9f-8b2a-1c9d8e7f6a5b';
-const initialPlayers: Player[] = [
-  { id: 'player-1', name: 'Player 1', balance: 1500, gameId: initialGameId },
-  { id: 'player-2', name: 'Player 2', balance: 1500, gameId: initialGameId },
-  { id: 'player-3', name: 'Player 3', balance: 1500, gameId: initialGameId },
-];
-const initialTransactions: Transaction[] = [];
-games.push({
-    id: initialGameId,
-    playerCount: 3,
-    startingBalance: 1500,
-    createdAt: new Date(),
-    players: initialPlayers,
-    transactions: initialTransactions,
-    diceRolls: [],
-});
+// Helper function to ensure the games directory exists
+async function ensureGamesDir() {
+  try {
+    await fs.access(gamesDir);
+  } catch (error) {
+    await fs.mkdir(gamesDir, {recursive: true});
+  }
+}
+
+// Helper function to write game data to a file
+async function writeGame(game: Game) {
+  await ensureGamesDir();
+  const filePath = path.join(gamesDir, `game_${game.id}.json`);
+  await fs.writeFile(filePath, JSON.stringify(game, null, 2));
+}
 
 // --- API FUNCTIONS ---
 
 export async function getGames(): Promise<Game[]> {
-  // Simulates: SELECT * FROM games;
-  return Promise.resolve(games);
+  await ensureGamesDir();
+  const gameFiles = (await fs.readdir(gamesDir)).filter(file =>
+    file.startsWith('game_')
+  );
+  const games: Game[] = [];
+  for (const file of gameFiles) {
+    const filePath = path.join(gamesDir, file);
+    const fileContent = await fs.readFile(filePath, 'utf-8');
+    const game = JSON.parse(fileContent) as Game;
+    games.push(game);
+  }
+  // Sort games by creation date, most recent first
+  return games.sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
 }
 
 export async function getGameById(id: string): Promise<Game | undefined> {
-  // Simulates: SELECT * FROM games WHERE id = ?;
-  return Promise.resolve(games.find(g => g.id === id));
+  await ensureGamesDir();
+  const filePath = path.join(gamesDir, `game_${id}.json`);
+  try {
+    const fileContent = await fs.readFile(filePath, 'utf-8');
+    const game = JSON.parse(fileContent) as Game;
+    // Dates are stored as strings in JSON, so we need to parse them back
+    game.createdAt = new Date(game.createdAt);
+    game.transactions.forEach(t => (t.createdAt = new Date(t.createdAt)));
+    game.diceRolls.forEach(dr => (dr.createdAt = new Date(dr.createdAt)));
+    return game;
+  } catch (error) {
+    // If the file doesn't exist, return undefined
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'code' in error &&
+      error.code === 'ENOENT'
+    ) {
+      return undefined;
+    }
+    // For other errors, re-throw
+    throw error;
+  }
 }
 
-export async function createGame(playerNames: string[], startingBalance: number): Promise<Game> {
+export async function createGame(
+  playerNames: string[],
+  startingBalance: number
+): Promise<Game> {
   const gameId = crypto.randomUUID();
   const players: Player[] = [];
   for (const name of playerNames) {
-    players.push({ id: crypto.randomUUID(), name, balance: startingBalance, gameId });
+    players.push({
+      id: crypto.randomUUID(),
+      name,
+      balance: startingBalance,
+      gameId,
+    });
   }
 
   const newGame: Game = {
@@ -52,26 +93,30 @@ export async function createGame(playerNames: string[], startingBalance: number)
     diceRolls: [],
   };
 
-  // Simulates: INSERT INTO games (...);
-  games.unshift(newGame);
-  return Promise.resolve(newGame);
+  await writeGame(newGame);
+  return newGame;
 }
 
 export async function getPlayersByGameId(gameId: string): Promise<Player[]> {
   const game = await getGameById(gameId);
-  return Promise.resolve(game ? game.players : []);
+  return game ? game.players : [];
 }
 
-export async function updatePlayerName(playerId: string, gameId: string, newName: string): Promise<Player> {
-    const game = await getGameById(gameId);
-    if (!game) throw new Error('Game not found');
+export async function updatePlayerName(
+  playerId: string,
+  gameId: string,
+  newName: string
+): Promise<Player> {
+  const game = await getGameById(gameId);
+  if (!game) throw new Error('Game not found');
 
-    const player = game.players.find(p => p.id === playerId);
-    if (!player) throw new Error('Player not found');
+  const player = game.players.find(p => p.id === playerId);
+  if (!player) throw new Error('Player not found');
 
-    player.name = newName;
+  player.name = newName;
+  await writeGame(game);
 
-    return Promise.resolve(player);
+  return player;
 }
 
 export async function makePayment(details: {
@@ -80,16 +125,20 @@ export async function makePayment(details: {
   toPlayerId: string | 'bank';
   amount: number;
   reason: string;
-}): Promise<{ fromPlayer: Player; toPlayer?: Player }> {
-  const { gameId, fromPlayerId, toPlayerId, amount, reason } = details;
+}): Promise<{fromPlayer: Player; toPlayer?: Player}> {
+  const {gameId, fromPlayerId, toPlayerId, amount, reason} = details;
   const game = await getGameById(gameId);
   if (!game) throw new Error('Game not found');
 
   const fromPlayer = game.players.find(p => p.id === fromPlayerId);
   if (!fromPlayer) throw new Error('Sender not found');
-  
-  const toPlayer = toPlayerId === 'bank' ? undefined : game.players.find(p => p.id === toPlayerId);
-  if (toPlayerId !== 'bank' && !toPlayer) throw new Error('Recipient not found');
+
+  const toPlayer =
+    toPlayerId === 'bank'
+      ? undefined
+      : game.players.find(p => p.id === toPlayerId);
+  if (toPlayerId !== 'bank' && !toPlayer)
+    throw new Error('Recipient not found');
 
   if (fromPlayer.balance < amount) throw new Error('Insufficient funds');
 
@@ -97,7 +146,7 @@ export async function makePayment(details: {
   if (toPlayer) {
     toPlayer.balance += amount;
   }
-  
+
   const transaction: Transaction = {
     id: crypto.randomUUID(),
     gameId,
@@ -109,59 +158,68 @@ export async function makePayment(details: {
   };
   game.transactions.push(transaction);
 
-  return Promise.resolve({ fromPlayer, toPlayer });
+  await writeGame(game);
+
+  return {fromPlayer, toPlayer};
 }
 
 export async function passGo(playerId: string, gameId: string): Promise<Player> {
-    const game = await getGameById(gameId);
-    if (!game) throw new Error('Game not found');
+  const game = await getGameById(gameId);
+  if (!game) throw new Error('Game not found');
 
-    const player = game.players.find(p => p.id === playerId);
-    if (!player) throw new Error('Player not found');
+  const player = game.players.find(p => p.id === playerId);
+  if (!player) throw new Error('Player not found');
 
-    const passGoAmount = 200;
-    player.balance += passGoAmount;
+  const passGoAmount = 200;
+  player.balance += passGoAmount;
 
-    const transaction: Transaction = {
-        id: crypto.randomUUID(),
-        gameId,
-        fromPlayerId: 'bank',
-        toPlayerId: playerId,
-        amount: passGoAmount,
-        reason: 'Passed GO',
-        createdAt: new Date(),
-    };
-    game.transactions.push(transaction);
+  const transaction: Transaction = {
+    id: crypto.randomUUID(),
+    gameId,
+    fromPlayerId: 'bank',
+    toPlayerId: playerId,
+    amount: passGoAmount,
+    reason: 'Passed GO',
+    createdAt: new Date(),
+  };
+  game.transactions.push(transaction);
 
-    return Promise.resolve(player);
+  await writeGame(game);
+
+  return player;
 }
 
-
-export async function getTransactionsByGameId(gameId: string): Promise<Transaction[]> {
-    const game = await getGameById(gameId);
-    return Promise.resolve(game ? game.transactions : []);
+export async function getTransactionsByGameId(
+  gameId: string
+): Promise<Transaction[]> {
+  const game = await getGameById(gameId);
+  return game ? game.transactions : [];
 }
 
 export async function recordDiceRoll(details: {
-    gameId: string,
-    values: [number, number],
-    total: number,
-    method: string,
+  gameId: string;
+  values: [number, number];
+  total: number;
+  method: string;
 }): Promise<DiceRoll> {
-    const game = await getGameById(details.gameId);
-    if (!game) throw new Error('Game not found');
-    
-    const newRoll: DiceRoll = {
-        id: crypto.randomUUID(),
-        createdAt: new Date(),
-        ...details
-    };
-    game.diceRolls.push(newRoll);
+  const game = await getGameById(details.gameId);
+  if (!game) throw new Error('Game not found');
 
-    return Promise.resolve(newRoll);
+  const newRoll: DiceRoll = {
+    id: crypto.randomUUID(),
+    createdAt: new Date(),
+    ...details,
+  };
+  game.diceRolls.push(newRoll);
+
+  await writeGame(game);
+
+  return newRoll;
 }
 
-export async function getDiceRollsByGameId(gameId: string): Promise<DiceRoll[]> {
-    const game = await getGameById(gameId);
-    return Promise.resolve(game ? game.diceRolls : []);
+export async function getDiceRollsByGameId(
+  gameId: string
+): Promise<DiceRoll[]> {
+  const game = await getGameById(gameId);
+  return game ? game.diceRolls : [];
 }
