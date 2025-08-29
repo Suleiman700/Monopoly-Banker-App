@@ -66,39 +66,38 @@ export function StatsDashboard({ initialTransactions, players, gameId, initialDi
   }, [transactions, diceRolls]);
 
   const playerBalanceTimeline = useMemo(() => {
-    const timeline: { transaction: number, [playerName: string]: number }[] = [];
-    const playerBalances: { [playerId: string]: number } = {};
-    const playerColors: { [playerName: string]: string } = {};
     const chartPlayerConfig: any = {};
-
+    const playerColors: { [playerName: string]: string } = {};
     players.forEach((p, i) => {
-      playerBalances[p.id] = settings.startingBalance;
-      const color = `hsl(var(--chart-${(i % 5) + 1}))`;
-      playerColors[p.name] = color;
-      chartPlayerConfig[p.name] = { label: p.name, color };
+        const color = `hsl(var(--chart-${(i % 5) + 1}))`;
+        chartPlayerConfig[p.name] = { label: p.name, color };
+        playerColors[p.name] = color;
     });
-  
-    const initialBalances = players.reduce((acc, p) => ({ ...acc, [p.name]: playerBalances[p.id] }), {});
-    timeline.push({
-      transaction: 0,
-      ...initialBalances
+
+    const timeline: { transaction: number, [playerName: string]: number }[] = [];
+    const initialBalances: { [playerName: string]: number } = {};
+    players.forEach(p => {
+        initialBalances[p.name] = settings.startingBalance;
     });
-    
+    timeline.push({ transaction: 0, ...initialBalances });
+
     const sortedTransactions = [...transactions].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
 
     sortedTransactions.forEach((t, i) => {
-        if (t.fromPlayerId !== 'bank') {
-            playerBalances[t.fromPlayerId] -= t.amount;
+        const prevBalances = { ...timeline[timeline.length - 1] };
+        
+        const fromPlayer = players.find(p => p.id === t.fromPlayerId);
+        const toPlayer = players.find(p => p.id === t.toPlayerId);
+
+        if (fromPlayer) {
+            prevBalances[fromPlayer.name] -= t.amount;
         }
-        if (t.toPlayerId !== 'bank') {
-            playerBalances[t.toPlayerId] += t.amount;
+        if (toPlayer) {
+            prevBalances[toPlayer.name] += t.amount;
         }
 
-        const currentBalances = players.reduce((acc, p) => ({ ...acc, [p.name]: playerBalances[p.id] }), {});
-        timeline.push({
-            transaction: i + 1,
-            ...currentBalances
-        });
+        prevBalances.transaction = i + 1;
+        timeline.push(prevBalances);
     });
 
     return { data: timeline, config: chartPlayerConfig, colors: playerColors };
@@ -183,10 +182,10 @@ export function StatsDashboard({ initialTransactions, players, gameId, initialDi
                 <LineChart data={playerBalanceTimeline.data}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="transaction" type="number" allowDecimals={false} />
-                  <YAxis />
+                  <YAxis tickFormatter={(value) => `$${value/1000}k`} />
                   <Tooltip content={<ChartTooltipContent indicator="dot" />} />
                   <Legend />
-                  {players.map(p => <Line key={p.id} type="monotone" dataKey={p.name} stroke={playerBalanceTimeline.colors[p.name]} />)}
+                  {players.map(p => <Line key={p.id} type="monotone" dataKey={p.name} stroke={playerBalanceTimeline.colors[p.name]} dot={false} />)}
                 </LineChart>
               </ResponsiveContainer>
             </ChartContainer>
@@ -277,4 +276,5 @@ export function StatsDashboard({ initialTransactions, players, gameId, initialDi
   );
 }
 
+    
     
