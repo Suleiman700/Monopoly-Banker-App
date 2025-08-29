@@ -6,10 +6,11 @@ import { DiceTab } from '@/components/DiceTab';
 import { RulesAdvisorTab } from '@/components/RulesAdvisorTab';
 import { OptionsTab } from '@/components/OptionsTab';
 import { getGameById } from '@/lib/db';
-import { Banknote, Dices, LayoutDashboard, HelpCircle, Settings, ArrowRightLeft } from 'lucide-react';
+import { Banknote, Dices, LayoutDashboard, HelpCircle, Settings, ArrowRightLeft, BrainCircuit } from 'lucide-react';
 import type { ThemeColors } from '@/lib/types';
 import { TradeTab } from '@/components/TradeTab';
 import { StatsDashboard } from '@/components/StatsDashboard';
+import { AIForecasterTab } from '@/components/AIForecasterTab';
 
 interface GamePageProps {
   params: { id: string };
@@ -53,12 +54,13 @@ export default async function GamePage({ params }: GamePageProps) {
               <p className="text-muted-foreground font-code text-sm">ID: {game.id}</p>
           </div>
           <Tabs defaultValue="bank" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 md:grid-cols-6 h-auto">
+            <TabsList className="grid w-full grid-cols-4 md:grid-cols-7 h-auto">
               <TabsTrigger value="bank" className="py-2"><Banknote className="mr-2 h-5 w-5" />Bank</TabsTrigger>
               <TabsTrigger value="trade" className="py-2"><ArrowRightLeft className="mr-2 h-5 w-5" />Trade</TabsTrigger>
               <TabsTrigger value="dice" className="py-2"><Dices className="mr-2 h-5 w-5" />Dice</TabsTrigger>
               <TabsTrigger value="stats" className="py-2"><LayoutDashboard className="mr-2 h-5 w-5" />Stats</TabsTrigger>
               <TabsTrigger value="advisor" className="py-2"><HelpCircle className="mr-2 h-5 w-5" />Rules Advisor</TabsTrigger>
+              <TabsTrigger value="forecaster" className="py-2"><BrainCircuit className="mr-2 h-5 w-5" />AI</TabsTrigger>
               <TabsTrigger value="options" className="py-2"><Settings className="mr-2 h-5 w-5" />Options</TabsTrigger>
             </TabsList>
             <TabsContent value="bank" className="mt-6">
@@ -75,6 +77,9 @@ export default async function GamePage({ params }: GamePageProps) {
             </TabsContent>
             <TabsContent value="advisor" className="mt-6">
               <RulesAdvisorTab />
+            </TabsContent>
+            <TabsContent value="forecaster" className="mt-6">
+              <AIForecasterTab gameData={game} />
             </TabsContent>
             <TabsContent value="options" className="mt-6">
               <OptionsTab gameId={gameId} initialSettings={settings} />
