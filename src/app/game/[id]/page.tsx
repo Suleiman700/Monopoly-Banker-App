@@ -6,7 +6,7 @@ import { DiceTab } from '@/components/DiceTab';
 import { StatsTab } from '@/components/StatsTab';
 import { RulesAdvisorTab } from '@/components/RulesAdvisorTab';
 import { OptionsTab } from '@/components/OptionsTab';
-import { getGameById, getPlayersByGameId, getTransactionsByGameId, getDiceRollsByGameId } from '@/lib/db';
+import { getGameById } from '@/lib/db';
 import { Banknote, Dices, BarChart3, HelpCircle, Settings } from 'lucide-react';
 
 interface GamePageProps {
@@ -22,9 +22,7 @@ export default async function GamePage({ params }: GamePageProps) {
   }
 
   // These are passed as initial data to client components
-  const players = await getPlayersByGameId(gameId);
-  const transactions = await getTransactionsByGameId(gameId);
-  const diceRolls = await getDiceRollsByGameId(gameId);
+  const { players, transactions, diceRolls, settings } = game;
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -43,7 +41,7 @@ export default async function GamePage({ params }: GamePageProps) {
             <TabsTrigger value="options" className="py-2"><Settings className="mr-2 h-5 w-5" />Options</TabsTrigger>
           </TabsList>
           <TabsContent value="bank" className="mt-6">
-            <BankTab initialPlayers={players} gameId={gameId} />
+            <BankTab initialPlayers={players} gameId={gameId} initialSettings={settings} />
           </TabsContent>
           <TabsContent value="dice" className="mt-6">
             <DiceTab gameId={gameId} />
@@ -55,7 +53,7 @@ export default async function GamePage({ params }: GamePageProps) {
             <RulesAdvisorTab />
           </TabsContent>
           <TabsContent value="options" className="mt-6">
-            <OptionsTab gameId={gameId} />
+            <OptionsTab gameId={gameId} initialSettings={settings} />
           </TabsContent>
         </Tabs>
       </main>

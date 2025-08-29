@@ -2,7 +2,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import type { Player } from '@/lib/types';
+import type { Player, GameSettings } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { makePayment } from '@/lib/db';
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from 'lucide-react';
+import { useEffect } from 'react';
 
 interface BankPaymentModalProps {
   isOpen: boolean;
@@ -18,15 +19,17 @@ interface BankPaymentModalProps {
   allPlayers: Player[];
   gameId: string;
   onPaymentSuccess: () => void;
+  settings: GameSettings;
 }
 
 const formSchema = z.object({
   toPlayerId: z.string().min(1, 'Please select a player.'),
   amount: z.coerce.number().positive('Amount must be positive.'),
   reason: z.string().min(1, 'Reason is required'),
+  reasonType: z.string().min(1, 'Please select a reason.'),
 });
 
-export function BankPaymentModal({ isOpen, setIsOpen, allPlayers, gameId, onPaymentSuccess }: BankPaymentModalProps) {
+export function BankPaymentModal({ isOpen, setIsOpen, allPlayers, gameId, onPaymentSuccess, settings }: BankPaymentModalProps) {
   const { toast } = useToast();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -34,8 +37,21 @@ export function BankPaymentModal({ isOpen, setIsOpen, allPlayers, gameId, onPaym
       toPlayerId: undefined,
       amount: '' as unknown as number,
       reason: '',
+      reasonType: 'manual',
     }
   });
+
+  const reasonType = form.watch('reasonType');
+
+  useEffect(() => {
+    if (reasonType === 'Pass Go') {
+      form.setValue('amount', settings.passGoAmount);
+      form.setValue('reason', 'Pass Go');
+    } else if (reasonType === 'Free Parking' && settings.freeParkingAmount > 0) {
+      form.setValue('amount', settings.freeParkingAmount);
+       form.setValue('reason', 'Free Parking');
+    }
+  }, [reasonType, settings, form]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
@@ -44,7 +60,7 @@ export function BankPaymentModal({ isOpen, setIsOpen, allPlayers, gameId, onPaym
         fromPlayerId: 'bank',
         toPlayerId: values.toPlayerId,
         amount: values.amount,
-        reason: values.reason,
+        reason: values.reasonType === 'manual' ? values.reason : values.reasonType,
       });
       
       onPaymentSuccess();
@@ -95,30 +111,56 @@ export function BankPaymentModal({ isOpen, setIsOpen, allPlayers, gameId, onPaym
             />
             <FormField
               control={form.control}
-              name="amount"
+              name="reasonType"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Amount</FormLabel>
-                  <FormControl>
-                    <Input type="number" placeholder="e.g., 200" {...field} onChange={(e) => field.onChange(e.target.valueAsNumber)} />
-                  </FormControl>
+                  <FormLabel>Reason</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                     <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a reason" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="manual">Manual</SelectItem>
+                      <SelectItem value="Pass Go">Pass Go (${settings.passGoAmount})</SelectItem>
+                      {settings.freeParkingAmount > 0 && (
+                        <SelectItem value="Free Parking">Free Parking (${settings.freeParkingAmount})</SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
             />
             <FormField
               control={form.control}
-              name="reason"
+              name="amount"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Reason</FormLabel>
+                  <FormLabel>Amount</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., Bank error in your favor" {...field} />
+                    <Input type="number" placeholder="e.g., 200" {...field} onChange={(e) => field.onChange(e.target.valueAsNumber)} disabled={reasonType !== 'manual'} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+            {reasonType === 'manual' && (
+              <FormField
+                control={form.control}
+                name="reason"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Manual Reason</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g., Bank error in your favor" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
             <DialogFooter>
                <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>Cancel</Button>
               <Button type="submit" disabled={form.formState.isSubmitting}>

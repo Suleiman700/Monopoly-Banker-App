@@ -24,6 +24,12 @@ export interface DiceRoll {
   createdAt: Date;
 }
 
+export interface GameSettings {
+  jailFee: number;
+  passGoAmount: number;
+  freeParkingAmount: number;
+}
+
 export interface Game {
   id:string;
   playerCount: number;
@@ -32,4 +38,5 @@ export interface Game {
   players: Player[];
   transactions: Transaction[];
   diceRolls: DiceRoll[];
+  settings: GameSettings;
 }

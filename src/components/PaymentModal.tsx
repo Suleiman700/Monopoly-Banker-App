@@ -2,7 +2,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import type { Player } from '@/lib/types';
+import type { Player, GameSettings } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -12,6 +12,7 @@ import { makePayment } from '@/lib/db';
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from './ui/separator';
 import { Loader2 } from 'lucide-react';
+import { useEffect } from 'react';
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -20,6 +21,7 @@ interface PaymentModalProps {
   allPlayers: Player[];
   gameId: string;
   onPaymentSuccess: () => void;
+  settings: GameSettings;
 }
 
 const formSchema = z.object({
@@ -29,7 +31,7 @@ const formSchema = z.object({
   reasonType: z.string().min(1, 'Please select a reason type.'),
 });
 
-export function PaymentModal({ isOpen, setIsOpen, fromPlayer, allPlayers, gameId, onPaymentSuccess }: PaymentModalProps) {
+export function PaymentModal({ isOpen, setIsOpen, fromPlayer, allPlayers, gameId, onPaymentSuccess, settings }: PaymentModalProps) {
   const { toast } = useToast();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -43,6 +45,19 @@ export function PaymentModal({ isOpen, setIsOpen, fromPlayer, allPlayers, gameId
 
   const reasonType = form.watch('reasonType');
   const toPlayerId = form.watch('toPlayerId');
+  
+  useEffect(() => {
+    if(toPlayerId === 'bank' && (reasonType === 'Jail Fee' || reasonType === 'Income Tax' || reasonType === 'Luxury Tax')) {
+       let amount = 0;
+       if (reasonType === 'Jail Fee') amount = settings.jailFee;
+       // These could also come from settings in the future
+       if (reasonType === 'Income Tax') amount = 100;
+       if (reasonType === 'Luxury Tax') amount = 200;
+       form.setValue('amount', amount);
+       form.setValue('reason', reasonType);
+    }
+  }, [reasonType, toPlayerId, settings, form]);
+
   
   const handleShortcutPayment = async (amount: number, reason: string) => {
     form.setValue('toPlayerId', 'bank');
@@ -94,7 +109,7 @@ export function PaymentModal({ isOpen, setIsOpen, fromPlayer, allPlayers, gameId
         <div className="space-y-3 py-2">
             <p className="font-semibold text-sm text-muted-foreground">Pay to Bank (Shortcuts)</p>
             <div className="flex flex-wrap gap-2">
-                <Button variant="outline" size="sm" onClick={() => handleShortcutPayment(50, 'Jail Fee')}>Jail Fee ($50)</Button>
+                <Button variant="outline" size="sm" onClick={() => handleShortcutPayment(settings.jailFee, 'Jail Fee')}>Jail Fee (${settings.jailFee})</Button>
                 <Button variant="outline" size="sm" onClick={() => handleShortcutPayment(100, 'Income Tax')}>Income Tax ($100)</Button>
                 <Button variant="outline" size="sm" onClick={() => handleShortcutPayment(200, 'Luxury Tax')}>Luxury Tax ($200)</Button>
             </div>
@@ -134,19 +149,6 @@ export function PaymentModal({ isOpen, setIsOpen, fromPlayer, allPlayers, gameId
             />
             <FormField
               control={form.control}
-              name="amount"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Amount</FormLabel>
-                  <FormControl>
-                    <Input type="number" placeholder="e.g., 200" {...field} value={field.value ?? ''} onChange={(e) => field.onChange(e.target.valueAsNumber || undefined)} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
               name="reasonType"
               render={({ field }) => (
                 <FormItem>
@@ -161,9 +163,9 @@ export function PaymentModal({ isOpen, setIsOpen, fromPlayer, allPlayers, gameId
                       <SelectItem value="manual">Manual</SelectItem>
                       {toPlayerId === 'bank' ? (
                         <>
-                          <SelectItem value="Jail Fee">Jail Fee</SelectItem>
-                          <SelectItem value="Income Tax">Income Tax</SelectItem>
-                          <SelectItem value="Luxury Tax">Luxury Tax</SelectItem>
+                          <SelectItem value="Jail Fee">Jail Fee (${settings.jailFee})</SelectItem>
+                          <SelectItem value="Income Tax">Income Tax ($100)</SelectItem>
+                          <SelectItem value="Luxury Tax">Luxury Tax ($200)</SelectItem>
                         </>
                       ) : (
                         <>
@@ -174,6 +176,19 @@ export function PaymentModal({ isOpen, setIsOpen, fromPlayer, allPlayers, gameId
                       )}
                     </SelectContent>
                   </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="amount"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Amount</FormLabel>
+                  <FormControl>
+                    <Input type="number" placeholder="e.g., 200" {...field} value={field.value ?? ''} onChange={(e) => field.onChange(e.target.valueAsNumber || undefined)} disabled={toPlayerId === 'bank' && reasonType !== 'manual'} />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}

@@ -1,12 +1,12 @@
 'use client';
 import { useState } from 'react';
-import type { Player } from '@/lib/types';
+import type { Player, GameSettings } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { MoreVertical, Landmark, ArrowUpCircle, Pencil, Banknote, PiggyBank, University } from 'lucide-react';
 import { PaymentModal } from './PaymentModal';
-import { passGo, getPlayersByGameId, makePayment } from '@/lib/db';
+import { passGo, getPlayersByGameId } from '@/lib/db';
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from 'next/navigation';
 import { EditPlayerModal } from './EditPlayerModal';
@@ -15,11 +15,13 @@ import { BankPaymentModal } from './BankPaymentModal';
 
 interface BankTabProps {
   initialPlayers: Player[];
+  initialSettings: GameSettings;
   gameId: string;
 }
 
-export function BankTab({ initialPlayers, gameId }: BankTabProps) {
+export function BankTab({ initialPlayers, initialSettings, gameId }: BankTabProps) {
   const [players, setPlayers] = useState<Player[]>(initialPlayers);
+  const [settings, setSettings] = useState<GameSettings>(initialSettings);
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [bankPaymentModalOpen, setBankPaymentModalOpen] = useState(false);
   const [editPlayerModalOpen, setEditPlayerModalOpen] = useState(false);
@@ -29,19 +31,21 @@ export function BankTab({ initialPlayers, gameId }: BankTabProps) {
   const { toast } = useToast();
   const router = useRouter();
 
-  const refreshPlayers = async () => {
+  const refreshData = async () => {
+    // In a real app, you'd fetch both players and settings
     const updatedPlayers = await getPlayersByGameId(gameId);
     setPlayers(updatedPlayers);
+    // For now, we just refresh the router, which will refetch server props
+    router.refresh();
   };
 
   const handlePassGo = async (player: Player) => {
     try {
       await passGo(player.id, gameId);
-      await refreshPlayers();
-      router.refresh();
+      await refreshData();
       toast({
         title: "Passed GO!",
-        description: `${player.name} collected $200.`,
+        description: `${player.name} collected $${settings.passGoAmount}.`,
       });
     } catch (error) {
       toast({ variant: 'destructive', title: 'Error', description: (error as Error).message });
@@ -68,8 +72,7 @@ export function BankTab({ initialPlayers, gameId }: BankTabProps) {
   }
 
   const handleSuccess = () => {
-    refreshPlayers();
-    router.refresh();
+    refreshData();
   };
 
   return (
@@ -124,7 +127,7 @@ export function BankTab({ initialPlayers, gameId }: BankTabProps) {
                   </DropdownMenuItem>
                   <DropdownMenuItem onSelect={() => handlePassGo(player)}>
                     <ArrowUpCircle className="mr-2 h-4 w-4" />
-                    <span>Pass GO ($200)</span>
+                    <span>Pass GO (${settings.passGoAmount})</span>
                   </DropdownMenuItem>
                    <DropdownMenuItem onSelect={() => handleOpenEditPlayerModal(player)}>
                     <Pencil className="mr-2 h-4 w-4" />
@@ -143,6 +146,7 @@ export function BankTab({ initialPlayers, gameId }: BankTabProps) {
             allPlayers={players}
             gameId={gameId}
             onPaymentSuccess={handleSuccess}
+            settings={settings}
           />
         )}
         <BankPaymentModal
@@ -151,6 +155,7 @@ export function BankTab({ initialPlayers, gameId }: BankTabProps) {
             allPlayers={players}
             gameId={gameId}
             onPaymentSuccess={handleSuccess}
+            settings={settings}
         />
         {selectedPlayer && (
           <EditPlayerModal

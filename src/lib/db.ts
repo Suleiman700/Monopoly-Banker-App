@@ -2,7 +2,7 @@
 
 import {promises as fs} from 'fs';
 import path from 'path';
-import type {Game, Player, Transaction, DiceRoll} from './types';
+import type {Game, Player, Transaction, DiceRoll, GameSettings} from './types';
 
 const gamesDir = path.join(process.cwd(), 'games');
 
@@ -95,6 +95,11 @@ export async function createGame(
     players,
     transactions: [],
     diceRolls: [],
+    settings: {
+      jailFee: 50,
+      passGoAmount: 200,
+      freeParkingAmount: 0,
+    },
   };
 
   await writeGame(newGame);
@@ -129,13 +134,17 @@ export async function makePayment(details: {
   toPlayerId: string | 'bank';
   amount: number;
   reason: string;
-}): Promise<{fromPlayer: Player; toPlayer?: Player}> {
+}): Promise<{fromPlayer?: Player; toPlayer?: Player}> {
   const {gameId, fromPlayerId, toPlayerId, amount, reason} = details;
   const game = await getGameById(gameId);
   if (!game) throw new Error('Game not found');
 
-  const fromPlayer = game.players.find(p => p.id === fromPlayerId);
-  if (!fromPlayer) throw new Error('Sender not found');
+  const fromPlayer =
+    fromPlayerId === 'bank'
+      ? undefined
+      : game.players.find(p => p.id === fromPlayerId);
+  if (fromPlayerId !== 'bank' && !fromPlayer)
+    throw new Error('Sender not found');
 
   const toPlayer =
     toPlayerId === 'bank'
@@ -144,9 +153,12 @@ export async function makePayment(details: {
   if (toPlayerId !== 'bank' && !toPlayer)
     throw new Error('Recipient not found');
 
-  if (fromPlayer.balance < amount) throw new Error('Insufficient funds');
+  if (fromPlayer && fromPlayer.balance < amount)
+    throw new Error('Insufficient funds');
 
-  fromPlayer.balance -= amount;
+  if (fromPlayer) {
+    fromPlayer.balance -= amount;
+  }
   if (toPlayer) {
     toPlayer.balance += amount;
   }
@@ -174,7 +186,7 @@ export async function passGo(playerId: string, gameId: string): Promise<Player> 
   const player = game.players.find(p => p.id === playerId);
   if (!player) throw new Error('Player not found');
 
-  const passGoAmount = 200;
+  const passGoAmount = game.settings.passGoAmount || 200;
   player.balance += passGoAmount;
 
   const transaction: Transaction = {
@@ -347,4 +359,17 @@ export async function undoTransaction(gameId: string, transactionId: string): Pr
 
     await writeGame(game);
     console.log('[undoTransaction] END: Successfully saved updated game file.');
+}
+
+export async function updateGameSettings(gameId: string, newSettings: Partial<GameSettings>): Promise<Game> {
+  const game = await getGameById(gameId);
+  if (!game) throw new Error('Game not found');
+
+  game.settings = {
+    ...game.settings,
+    ...newSettings,
+  };
+
+  await writeGame(game);
+  return game;
 }
