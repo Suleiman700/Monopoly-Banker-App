@@ -3,7 +3,7 @@
 import type { Game, Player, Transaction, DiceRoll } from './types';
 
 // In-memory store
-let games: Game[] = [];
+const games: Game[] = [];
 
 // --- MOCK DATA ---
 const initialGameId = 'c1a7b8e8-4c3d-4e9f-8b2a-1c9d8e7f6a5b';
