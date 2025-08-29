@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { makePayment } from '@/lib/db';
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, ArrowLeft, University } from 'lucide-react';
@@ -27,6 +28,7 @@ type Payer = Player | { id: 'bank'; name: 'Bank'; balance: Infinity };
 const formSchema = z.object({
   amount: z.coerce.number().positive('Amount must be positive.'),
   reason: z.string().min(1, 'Reason is required.'),
+  reasonType: z.string().min(1, 'Please select a reason type.'),
 });
 
 export function MultiStepPaymentModal({ isOpen, setIsOpen, allPlayers, gameId, onPaymentSuccess, settings }: MultiStepPaymentModalProps) {
@@ -40,8 +42,19 @@ export function MultiStepPaymentModal({ isOpen, setIsOpen, allPlayers, gameId, o
     defaultValues: {
       amount: undefined,
       reason: '',
+      reasonType: 'manual',
     },
   });
+  
+  const reasonType = form.watch('reasonType');
+
+  useEffect(() => {
+    if (reasonType === 'manual') {
+      form.setValue('reason', '');
+    } else {
+      form.setValue('reason', reasonType);
+    }
+  }, [reasonType, form]);
 
   const resetFlow = () => {
     setStep(1);
@@ -63,6 +76,19 @@ export function MultiStepPaymentModal({ isOpen, setIsOpen, allPlayers, gameId, o
     if (!fromPayer) return [];
     return availablePayers.filter(p => p.id !== fromPayer.id);
   }, [fromPayer, allPlayers]);
+  
+  const handleSetToPayer = (payer: Payer) => {
+    setToPayer(payer);
+    // Set default reason if applicable
+    if (fromPayer?.id !== 'bank' && payer.id !== 'bank') {
+      form.setValue('reasonType', 'Rent');
+      form.setValue('reason', 'Rent');
+    } else {
+      form.setValue('reasonType', 'manual');
+      form.setValue('reason', '');
+    }
+    setStep(3);
+  };
 
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
@@ -117,7 +143,7 @@ export function MultiStepPaymentModal({ isOpen, setIsOpen, allPlayers, gameId, o
             <DialogTitle className="font-headline text-2xl text-center mb-4">Who are they paying?</DialogTitle>
              <div className="grid grid-cols-2 gap-4">
                 {availablePayees.map(p => (
-                  <Button key={p.id} variant="outline" className="h-20 text-lg" onClick={() => { setToPayer(p); setStep(3); }}>
+                  <Button key={p.id} variant="outline" className="h-20 text-lg" onClick={() => handleSetToPayer(p)}>
                      {p.id === 'bank' && <University className="mr-2"/>} {p.name}
                   </Button>
                 ))}
@@ -135,6 +161,36 @@ export function MultiStepPaymentModal({ isOpen, setIsOpen, allPlayers, gameId, o
             </DialogHeader>
              <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
+                   <FormField
+                    control={form.control}
+                    name="reasonType"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Reason</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                           <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a reason" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="manual">Manual</SelectItem>
+                            {toPayer?.id === 'bank' ? (
+                              <>
+                                <SelectItem value="Jail Fee">Jail Fee</SelectItem>
+                                <SelectItem value="Mortgage">Mortgage</SelectItem>
+                                <SelectItem value="Buy Property">Buy Property</SelectItem>
+                                <SelectItem value="Buy Building">Buy Building</SelectItem>
+                              </>
+                            ) : (
+                              <SelectItem value="Rent">Rent</SelectItem>
+                            )}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                   <FormField
                     control={form.control}
                     name="amount"
@@ -148,19 +204,21 @@ export function MultiStepPaymentModal({ isOpen, setIsOpen, allPlayers, gameId, o
                       </FormItem>
                     )}
                   />
-                  <FormField
-                    control={form.control}
-                    name="reason"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Reason</FormLabel>
-                        <FormControl>
-                          <Input placeholder="e.g., Rent for Boardwalk" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  {reasonType === 'manual' && (
+                    <FormField
+                      control={form.control}
+                      name="reason"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Manual Reason</FormLabel>
+                          <FormControl>
+                            <Input placeholder="e.g., Rent for Boardwalk" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
                    <DialogFooter>
                     <Button type="submit" disabled={form.formState.isSubmitting}>
                       {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
