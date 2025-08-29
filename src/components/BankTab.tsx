@@ -4,15 +4,14 @@ import type { Player, GameSettings, Transaction } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { MoreVertical, Landmark, ArrowUpCircle, Pencil, Banknote, PiggyBank, University } from 'lucide-react';
-import { PaymentModal } from './PaymentModal';
+import { MoreVertical, Landmark, ArrowUpCircle, Pencil, Banknote, PiggyBank, University, HandCoins } from 'lucide-react';
 import { passGo } from '@/lib/db';
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from 'next/navigation';
 import { EditPlayerModal } from './EditPlayerModal';
 import { MassPaymentModal } from './MassPaymentModal';
-import { BankPaymentModal } from './BankPaymentModal';
 import { playPassGoSound } from '@/lib/sounds';
+import { MultiStepPaymentModal } from './MultiStepPaymentModal';
 
 interface BankTabProps {
   initialPlayers: Player[];
@@ -26,7 +25,6 @@ export function BankTab({ initialPlayers, initialSettings, gameId, initialTransa
   const [settings, setSettings] = useState<GameSettings>(initialSettings);
   const [transactions, setTransactions] = useState<Transaction[]>(initialTransactions);
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
-  const [bankPaymentModalOpen, setBankPaymentModalOpen] = useState(false);
   const [editPlayerModalOpen, setEditPlayerModalOpen] = useState(false);
   const [massPaymentModalOpen, setMassPaymentModalOpen] = useState(false);
   const [massPaymentType, setMassPaymentType] = useState<'give' | 'take'>('give');
@@ -65,15 +63,6 @@ export function BankTab({ initialPlayers, initialSettings, gameId, initialTransa
       toast({ variant: 'destructive', title: 'Error', description: (error as Error).message });
     }
   };
-
-  const handleOpenPaymentModal = (player: Player) => {
-    setSelectedPlayer(player);
-    setPaymentModalOpen(true);
-  };
-
-  const handleOpenBankPaymentModal = () => {
-    setBankPaymentModalOpen(true);
-  };
   
   const handleOpenEditPlayerModal = (player: Player) => {
     setSelectedPlayer(player);
@@ -104,20 +93,6 @@ export function BankTab({ initialPlayers, initialSettings, gameId, initialTransa
               <p className="font-bold text-lg text-primary flex items-center gap-2"><University /> The Bank</p>
               <p className="text-2xl font-mono">${bankBalance.toLocaleString()}</p>
             </div>
-             <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon">
-                    <MoreVertical className="h-5 w-5" />
-                    <span className="sr-only">Bank Actions</span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onSelect={handleOpenBankPaymentModal}>
-                    <Landmark className="mr-2 h-4 w-4" />
-                    <span>Pay Player...</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
           </div>
           
           {/* Player Cards */}
@@ -135,10 +110,6 @@ export function BankTab({ initialPlayers, initialSettings, gameId, initialTransa
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onSelect={() => handleOpenPaymentModal(player)}>
-                    <Landmark className="mr-2 h-4 w-4" />
-                    <span>Pay...</span>
-                  </DropdownMenuItem>
                   <DropdownMenuItem onSelect={() => handlePassGo(player)}>
                     <ArrowUpCircle className="mr-2 h-4 w-4" />
                     <span>Pass GO (${settings.passGoAmount})</span>
@@ -152,25 +123,16 @@ export function BankTab({ initialPlayers, initialSettings, gameId, initialTransa
             </div>
           ))}
         </div>
-        {selectedPlayer && (
-          <PaymentModal
+        
+        <MultiStepPaymentModal
             isOpen={paymentModalOpen}
             setIsOpen={setPaymentModalOpen}
-            fromPlayer={selectedPlayer}
-            allPlayers={players}
-            gameId={gameId}
-            onPaymentSuccess={handleSuccess}
-            settings={settings}
-          />
-        )}
-        <BankPaymentModal
-            isOpen={bankPaymentModalOpen}
-            setIsOpen={setBankPaymentModalOpen}
             allPlayers={players}
             gameId={gameId}
             onPaymentSuccess={handleSuccess}
             settings={settings}
         />
+       
         {selectedPlayer && (
           <EditPlayerModal
             isOpen={editPlayerModalOpen}
@@ -190,6 +152,9 @@ export function BankTab({ initialPlayers, initialSettings, gameId, initialTransa
           />
       </CardContent>
       <CardFooter className="flex-col sm:flex-row gap-2 pt-6">
+         <Button onClick={() => setPaymentModalOpen(true)}>
+            <HandCoins className="mr-2"/> Make a Payment
+        </Button>
         <Button variant="outline" onClick={() => handleOpenMassPaymentModal('give')}>
             <PiggyBank className="mr-2"/> Give To All Players...
         </Button>
