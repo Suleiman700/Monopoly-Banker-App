@@ -8,9 +8,13 @@ import { Lightbulb, Loader2, Sparkles } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
-export function RulesAdvisorTab() {
+interface RulesAdvisorTabProps {
+    results: ResolveEdgeCaseOutput[];
+    setResults: (results: ResolveEdgeCaseOutput[]) => void;
+}
+
+export function RulesAdvisorTab({ results, setResults }: RulesAdvisorTabProps) {
   const [scenario, setScenario] = useState('');
-  const [results, setResults] = useState<ResolveEdgeCaseOutput[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -24,7 +28,7 @@ export function RulesAdvisorTab() {
 
     try {
       const response = await resolveEdgeCase({ gameScenario: scenario });
-      setResults(prevResults => [response, ...prevResults]);
+      setResults([response, ...results]);
       setScenario('');
     } catch (e) {
       setError('Failed to get advice. The AI may be unavailable. Please try again later.');

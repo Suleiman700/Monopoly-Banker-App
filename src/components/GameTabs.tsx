@@ -11,6 +11,7 @@ import { StatsDashboard } from '@/components/StatsDashboard';
 import { AIForecasterTab } from '@/components/AIForecasterTab';
 import type { Game } from '@/lib/types';
 import type { PredictWinnerOutput } from '@/ai/flows/predict-winner-flow';
+import type { ResolveEdgeCaseOutput } from '@/ai/flows/resolve-edge-cases-with-ai';
 
 interface GameTabsProps {
   game: Game;
@@ -19,6 +20,8 @@ interface GameTabsProps {
 export function GameTabs({ game }: GameTabsProps) {
   const { players, transactions, diceRolls, settings, id: gameId } = game;
   const [predictionResult, setPredictionResult] = useState<PredictWinnerOutput | null>(null);
+  const [rulesAdvisorResults, setRulesAdvisorResults] = useState<ResolveEdgeCaseOutput[]>([]);
+
 
   return (
     <Tabs defaultValue="bank" className="w-full">
@@ -44,7 +47,7 @@ export function GameTabs({ game }: GameTabsProps) {
             <StatsDashboard initialTransactions={transactions} players={players} gameId={gameId} initialDiceRolls={diceRolls} initialSettings={settings} />
         </TabsContent>
         <TabsContent value="advisor" className="mt-6">
-            <RulesAdvisorTab />
+            <RulesAdvisorTab results={rulesAdvisorResults} setResults={setRulesAdvisorResults} />
         </TabsContent>
         <TabsContent value="forecaster" className="mt-6">
             <AIForecasterTab gameData={game} result={predictionResult} setResult={setPredictionResult} />
