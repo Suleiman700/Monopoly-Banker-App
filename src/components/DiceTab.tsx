@@ -62,21 +62,22 @@ export function DiceTab({ gameId }: { gameId: string }) {
     setDice([roll1, roll2]);
     setTotal(newTotal);
     setLastRollMethod(nextMethod);
+    setIsRolling(false); // Re-enable button immediately
 
-    await recordDiceRoll({
-        gameId,
-        values: [roll1, roll2],
-        total: newTotal,
-        method: nextMethod,
-    });
-    router.refresh();
-    
     toast({
         title: `You rolled a ${newTotal}!`,
         description: `(${roll1} + ${roll2})`,
     });
     
-    setIsRolling(false);
+    // Record and refresh in the background
+    recordDiceRoll({
+        gameId,
+        values: [roll1, roll2],
+        total: newTotal,
+        method: nextMethod,
+    }).then(() => {
+        router.refresh();
+    });
   };
 
   return (
