@@ -36,7 +36,10 @@ export function ThemeSelectionModal({ isOpen, setIsOpen, initialSettings, gameId
   const { toast } = useToast();
   
   const getCurrentThemeName = () => {
-    const currentTheme = initialSettings.theme;
+    const currentTheme = initialSettings?.theme;
+    if (!currentTheme) {
+        return "Classic Teal";
+    }
     return Object.keys(THEMES).find(name => 
       THEMES[name].primary === currentTheme.primary &&
       THEMES[name].accent === currentTheme.accent &&
