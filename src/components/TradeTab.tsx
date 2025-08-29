@@ -58,12 +58,12 @@ export function TradeTab({ initialPlayers, gameId }: TradeTabProps) {
 
   const player1NewBalance = useMemo(() => {
     if (!player1) return null;
-    return player1.balance - player1Amount + player2Amount;
+    return player1.balance - Number(player1Amount) + Number(player2Amount);
   }, [player1, player1Amount, player2Amount]);
 
   const player2NewBalance = useMemo(() => {
     if (!player2) return null;
-    return player2.balance - player2Amount + player1Amount;
+    return player2.balance - Number(player2Amount) + Number(player1Amount);
   }, [player2, player1Amount, player2Amount]);
 
 
@@ -196,7 +196,7 @@ export function TradeTab({ initialPlayers, gameId }: TradeTabProps) {
           </CardContent>
           <CardFooter>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? <Loader2 className="animate-spin" /> : <ArrowRightLeft />}
+              {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ArrowRightLeft className="mr-2 h-4 w-4" />}
               {isSubmitting ? 'Executing Trade...' : 'Execute Trade'}
             </Button>
           </CardFooter>
