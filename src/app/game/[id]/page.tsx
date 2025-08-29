@@ -5,8 +5,9 @@ import { BankTab } from '@/components/BankTab';
 import { DiceTab } from '@/components/DiceTab';
 import { StatsTab } from '@/components/StatsTab';
 import { RulesAdvisorTab } from '@/components/RulesAdvisorTab';
+import { OptionsTab } from '@/components/OptionsTab';
 import { getGameById, getPlayersByGameId, getTransactionsByGameId, getDiceRollsByGameId } from '@/lib/db';
-import { Banknote, Dices, BarChart3, HelpCircle } from 'lucide-react';
+import { Banknote, Dices, BarChart3, HelpCircle, Settings } from 'lucide-react';
 
 interface GamePageProps {
   params: { id: string };
@@ -34,11 +35,12 @@ export default async function GamePage({ params }: GamePageProps) {
             <p className="text-muted-foreground font-code text-sm">ID: {game.id}</p>
         </div>
         <Tabs defaultValue="bank" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 h-auto">
+          <TabsList className="grid w-full grid-cols-3 md:grid-cols-5 h-auto">
             <TabsTrigger value="bank" className="py-2"><Banknote className="mr-2 h-5 w-5" />Bank</TabsTrigger>
             <TabsTrigger value="dice" className="py-2"><Dices className="mr-2 h-5 w-5" />Dice</TabsTrigger>
             <TabsTrigger value="stats" className="py-2"><BarChart3 className="mr-2 h-5 w-5" />Stats</TabsTrigger>
             <TabsTrigger value="advisor" className="py-2"><HelpCircle className="mr-2 h-5 w-5" />Rules Advisor</TabsTrigger>
+            <TabsTrigger value="options" className="py-2"><Settings className="mr-2 h-5 w-5" />Options</TabsTrigger>
           </TabsList>
           <TabsContent value="bank" className="mt-6">
             <BankTab initialPlayers={players} gameId={gameId} />
@@ -51,6 +53,9 @@ export default async function GamePage({ params }: GamePageProps) {
           </TabsContent>
           <TabsContent value="advisor" className="mt-6">
             <RulesAdvisorTab />
+          </TabsContent>
+          <TabsContent value="options" className="mt-6">
+            <OptionsTab gameId={gameId} />
           </TabsContent>
         </Tabs>
       </main>

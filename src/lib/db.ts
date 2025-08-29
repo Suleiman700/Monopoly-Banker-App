@@ -33,8 +33,12 @@ export async function getGames(): Promise<Game[]> {
   for (const file of gameFiles) {
     const filePath = path.join(gamesDir, file);
     const fileContent = await fs.readFile(filePath, 'utf-8');
-    const game = JSON.parse(fileContent) as Game;
-    games.push(game);
+    try {
+      const game = JSON.parse(fileContent) as Game;
+      games.push(game);
+    } catch (e) {
+      console.error(`Could not parse ${file}`);
+    }
   }
   // Sort games by creation date, most recent first
   return games.sort(
@@ -222,4 +226,77 @@ export async function getDiceRollsByGameId(
 ): Promise<DiceRoll[]> {
   const game = await getGameById(gameId);
   return game ? game.diceRolls : [];
+}
+
+export async function deleteGame(gameId: string): Promise<void> {
+    await ensureGamesDir();
+    const filePath = path.join(gamesDir, `game_${gameId}.json`);
+    try {
+        await fs.unlink(filePath);
+    } catch (error) {
+        if (typeof error === 'object' && error !== null && 'code' in error && error.code === 'ENOENT') {
+            // File already deleted, ignore.
+            return;
+        }
+        throw error;
+    }
+}
+
+export async function resetGame(gameId: string): Promise<Game> {
+    const game = await getGameById(gameId);
+    if (!game) throw new Error('Game not found');
+
+    // Reset player balances
+    game.players.forEach(p => {
+        p.balance = game.startingBalance;
+    });
+
+    // Clear transactions and dice rolls
+    game.transactions = [];
+    game.diceRolls = [];
+
+    await writeGame(game);
+    return game;
+}
+
+export async function giveToAllPlayers(gameId: string, amount: number, reason: string): Promise<void> {
+    const game = await getGameById(gameId);
+    if (!game) throw new Error('Game not found');
+
+    for (const player of game.players) {
+        player.balance += amount;
+        const transaction: Transaction = {
+            id: crypto.randomUUID(),
+            gameId,
+            fromPlayerId: 'bank',
+            toPlayerId: player.id,
+            amount,
+            reason,
+            createdAt: new Date(),
+        };
+        game.transactions.push(transaction);
+    }
+
+    await writeGame(game);
+}
+
+export async function takeFromAllPlayers(gameId: string, amount: number, reason: string): Promise<void> {
+    const game = await getGameById(gameId);
+    if (!game) throw new Error('Game not found');
+
+    for (const player of game.players) {
+        player.balance -= amount;
+        const transaction: Transaction = {
+            id: crypto.randomUUID(),
+            gameId,
+            fromPlayerId: player.id,
+            toPlayerId: 'bank',
+            amount,
+            reason,
+            createdAt: new Date(),
+        };
+        game.transactions.push(transaction);
+    }
+
+    await writeGame(game);
 }

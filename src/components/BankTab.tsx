@@ -1,15 +1,16 @@
 'use client';
 import { useState } from 'react';
 import type { Player } from '@/lib/types';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { MoreVertical, Landmark, ArrowUpCircle, Pencil } from 'lucide-react';
+import { MoreVertical, Landmark, ArrowUpCircle, Pencil, ArrowDownCircle, Banknotes, PiggyBank } from 'lucide-react';
 import { PaymentModal } from './PaymentModal';
 import { passGo, getPlayersByGameId } from '@/lib/db';
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from 'next/navigation';
 import { EditPlayerModal } from './EditPlayerModal';
+import { MassPaymentModal } from './MassPaymentModal';
 
 interface BankTabProps {
   initialPlayers: Player[];
@@ -20,6 +21,8 @@ export function BankTab({ initialPlayers, gameId }: BankTabProps) {
   const [players, setPlayers] = useState<Player[]>(initialPlayers);
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [editPlayerModalOpen, setEditPlayerModalOpen] = useState(false);
+  const [massPaymentModalOpen, setMassPaymentModalOpen] = useState(false);
+  const [massPaymentType, setMassPaymentType] = useState<'give' | 'take'>('give');
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
   const { toast } = useToast();
   const router = useRouter();
@@ -52,6 +55,11 @@ export function BankTab({ initialPlayers, gameId }: BankTabProps) {
     setSelectedPlayer(player);
     setEditPlayerModalOpen(true);
   };
+
+  const handleOpenMassPaymentModal = (type: 'give' | 'take') => {
+    setMassPaymentType(type);
+    setMassPaymentModalOpen(true);
+  }
 
   const handleSuccess = () => {
     refreshPlayers();
@@ -116,7 +124,22 @@ export function BankTab({ initialPlayers, gameId }: BankTabProps) {
             onPlayerUpdated={handleSuccess}
           />
         )}
+        <MassPaymentModal
+            isOpen={massPaymentModalOpen}
+            setIsOpen={setMassPaymentModalOpen}
+            gameId={gameId}
+            onSuccess={handleSuccess}
+            type={massPaymentType}
+          />
       </CardContent>
+      <CardFooter className="flex-col sm:flex-row gap-2 pt-6">
+        <Button variant="outline" onClick={() => handleOpenMassPaymentModal('give')}>
+            <PiggyBank className="mr-2"/> Give To All Players...
+        </Button>
+        <Button variant="outline" onClick={() => handleOpenMassPaymentModal('take')}>
+            <Banknotes className="mr-2"/> Take From All Players...
+        </Button>
+      </CardFooter>
     </Card>
   );
 }
