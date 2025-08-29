@@ -36,7 +36,7 @@ export function StatsDashboard({ initialTransactions, players, initialDiceRolls,
   }, [initialDiceRolls]);
 
   const chartConfig = useMemo(() => {
-    const config = {
+    const config: any = {
       income: { label: 'Income', color: 'hsl(var(--chart-2))' },
       outcome: { label: 'Outcome', color: 'hsl(var(--chart-1))' },
       rolls: { label: 'Rolls', color: 'hsl(var(--chart-3))' },
@@ -68,7 +68,7 @@ export function StatsDashboard({ initialTransactions, players, initialDiceRolls,
         return { name: p.name, income, outcome };
     });
 
-    const startingBalance = players.length > 0 ? (players[0].balance + incomeOutcome.reduce((acc, p) => acc + p.outcome, 0) - incomeOutcome.reduce((acc, p) => acc + p.income, 0)) : 1500;
+    const startingBalance = gameId && players.length > 0 && transactions.length > 0 ? transactions[0].amount : 1500;
     
     const balanceHistory = (() => {
         const history: any[] = [{ transactionIndex: 0 }];
@@ -81,10 +81,12 @@ export function StatsDashboard({ initialTransactions, players, initialDiceRolls,
                 const prev = { ...history[history.length - 1] };
                 
                 if (t.fromPlayerId !== 'bank') {
-                    prev[t.fromPlayerId] -= t.amount;
+                    const fromPlayer = players.find(p => p.id === t.fromPlayerId);
+                    if(fromPlayer) prev[t.fromPlayerId] -= t.amount;
                 }
                 if (t.toPlayerId !== 'bank') {
-                    prev[t.toPlayerId] += t.amount;
+                    const toPlayer = players.find(p => p.id === t.toPlayerId);
+                    if(toPlayer) prev[t.toPlayerId] += t.amount;
                 }
 
                 prev.transactionIndex = index + 1;
@@ -114,7 +116,7 @@ export function StatsDashboard({ initialTransactions, players, initialDiceRolls,
         totalMoneySpent: transactions.filter(t => t.fromPlayerId !== 'bank').reduce((sum, t) => sum + t.amount, 0),
         numberOfRounds: players.length > 0 ? Math.floor(diceRolls.length / players.length) : 0,
     };
-  }, [selectedPlayerId, transactions, diceRolls, players]);
+  }, [selectedPlayerId, transactions, diceRolls, players, gameId]);
 
   
   const getPlayerName = (id: string | 'bank') => {
@@ -278,7 +280,7 @@ export function StatsDashboard({ initialTransactions, players, initialDiceRolls,
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredData.filteredTransactions.length > 0 ? filteredData.filteredTransactions.map(t => (
+                {filteredTransactions.length > 0 ? filteredTransactions.map(t => (
                   <TableRow key={t.id}>
                     <TableCell className="font-medium">{getPlayerName(t.fromPlayerId)}</TableCell>
                     <TableCell className="font-medium">{getPlayerName(t.toPlayerId)}</TableCell>
@@ -306,7 +308,7 @@ export function StatsDashboard({ initialTransactions, players, initialDiceRolls,
                     <TableCell colSpan={6} className="text-center h-24">No transactions to display.</TableCell>
                   </TableRow>
                 )}
-              </Body>
+              </TableBody>
             </Table>
           </div>
         </CardContent>
