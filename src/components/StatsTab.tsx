@@ -20,22 +20,23 @@ interface StatsTabProps {
   gameId: string;
 }
 
-const chartConfig = {
-  income: { label: 'Income', color: 'hsl(var(--chart-2))' },
-  outcome: { label: 'Outcome', color: 'hsl(var(--chart-1))' },
-};
-
-players.forEach((player, index) => {
-    const chartNum = (index % 5) + 1;
-    chartConfig[player.id] = { label: player.name, color: `hsl(var(--chart-${chartNum}))`};
-});
-
-
 export function StatsTab({ initialTransactions, players, initialDiceRolls, gameId }: StatsTabProps) {
   const [selectedPlayerId, setSelectedPlayerId] = useState<string>('all');
   const [undoingTransactionId, setUndoingTransactionId] = useState<string | null>(null);
   const router = useRouter();
   const { toast } = useToast();
+
+  const chartConfig = useMemo(() => {
+    const config = {
+      income: { label: 'Income', color: 'hsl(var(--chart-2))' },
+      outcome: { label: 'Outcome', color: 'hsl(var(--chart-1))' },
+    };
+    players.forEach((player, index) => {
+        const chartNum = (index % 5) + 1;
+        config[player.id] = { label: player.name, color: `hsl(var(--chart-${chartNum}))`};
+    });
+    return config;
+  }, [players]);
 
   const filteredData = useMemo(() => {
     const isPlayerSpecific = selectedPlayerId !== 'all';
