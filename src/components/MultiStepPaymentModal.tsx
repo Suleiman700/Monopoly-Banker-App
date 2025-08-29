@@ -40,7 +40,7 @@ export function MultiStepPaymentModal({ isOpen, setIsOpen, allPlayers, gameId, o
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      amount: undefined,
+      amount: '' as unknown as number,
       reason: '',
       reasonType: 'manual',
     },
@@ -60,13 +60,18 @@ export function MultiStepPaymentModal({ isOpen, setIsOpen, allPlayers, gameId, o
     setStep(1);
     setFromPayer(null);
     setToPayer(null);
-    form.reset();
+    form.reset({
+      amount: '' as unknown as number,
+      reason: '',
+      reasonType: 'manual'
+    });
   };
 
   useEffect(() => {
     if (isOpen) {
       resetFlow();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
   
   const bankAsPayer: Payer = { id: 'bank', name: 'Bank', balance: Infinity };
@@ -75,7 +80,7 @@ export function MultiStepPaymentModal({ isOpen, setIsOpen, allPlayers, gameId, o
   const availablePayees = useMemo(() => {
     if (!fromPayer) return [];
     return availablePayers.filter(p => p.id !== fromPayer.id);
-  }, [fromPayer, allPlayers]);
+  }, [fromPayer, allPlayers, availablePayers]);
   
   const handleSetToPayer = (payer: Payer) => {
     setToPayer(payer);
@@ -83,7 +88,11 @@ export function MultiStepPaymentModal({ isOpen, setIsOpen, allPlayers, gameId, o
     if (fromPayer?.id !== 'bank' && payer.id !== 'bank') {
       form.setValue('reasonType', 'Rent');
       form.setValue('reason', 'Rent');
-    } else {
+    } else if (fromPayer?.id !== 'bank' && payer.id === 'bank') {
+        form.setValue('reasonType', 'Buy Property');
+        form.setValue('reason', 'Buy Property');
+    }
+     else {
       form.setValue('reasonType', 'manual');
       form.setValue('reason', '');
     }
@@ -198,7 +207,7 @@ export function MultiStepPaymentModal({ isOpen, setIsOpen, allPlayers, gameId, o
                       <FormItem>
                         <FormLabel>Amount</FormLabel>
                         <FormControl>
-                          <Input type="number" placeholder="e.g., 200" {...field} onChange={(e) => field.onChange(e.target.valueAsNumber)} />
+                          <Input type="number" placeholder="e.g., 200" {...field} value={field.value ?? ''} onChange={(e) => field.onChange(e.target.valueAsNumber || undefined)} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
