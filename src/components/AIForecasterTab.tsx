@@ -21,24 +21,38 @@ const renderLegend = () => {
     return <p className="text-center text-sm text-muted-foreground mt-2">Win Probability</p>;
 };
 
+const MAX_RETRIES = 2;
+const RETRY_DELAY = 2000; // 2 seconds
+
 export function AIForecasterTab({ gameData, result, setResult }: AIForecasterTabProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (retryCount = 0) => {
     setError(null);
     setIsLoading(true);
-    setResult(null);
+    if (retryCount === 0) {
+      setResult(null);
+    }
 
     try {
       const { players, transactions, diceRolls } = gameData;
       const response = await predictWinner({ players, transactions, diceRolls });
       setResult(response);
-    } catch (e) {
+    } catch (e: any) {
+       const errorMessage = e.message || 'An unknown error occurred.';
+       if (errorMessage.includes('503') && retryCount < MAX_RETRIES) {
+         await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
+         await handleSubmit(retryCount + 1);
+         return; // Exit to avoid setting final error message
+       }
       setError('Failed to get prediction. The AI model may be unavailable or the request timed out. Please try again later.');
       console.error(e);
     } finally {
-      setIsLoading(false);
+      // Only set loading to false on the final attempt (success or failure)
+      if (isLoading) {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -73,7 +87,7 @@ export function AIForecasterTab({ gameData, result, setResult }: AIForecasterTab
             </Alert>
         )}
         <div className="flex justify-center">
-            <Button onClick={handleSubmit} disabled={isLoading} size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90 shadow-md">
+            <Button onClick={() => handleSubmit()} disabled={isLoading} size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90 shadow-md">
                 {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <BrainCircuit className="mr-2 h-5 w-5" />}
                 {isLoading ? 'Analyzing Game...' : 'Predict Winner'}
             </Button>
