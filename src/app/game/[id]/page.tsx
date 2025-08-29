@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BankTab } from '@/components/BankTab';
 import { DiceTab } from '@/components/DiceTab';
 import { StatsTab } from '@/components/StatsTab';
+import { StatsDashboard } from '@/components/StatsDashboard';
 import { RulesAdvisorTab } from '@/components/RulesAdvisorTab';
 import { OptionsTab } from '@/components/OptionsTab';
 import { getGameById } from '@/lib/db';
@@ -72,10 +73,10 @@ export default async function GamePage({ params }: GamePageProps) {
               <DiceTab gameId={gameId} settings={settings} />
             </TabsContent>
             <TabsContent value="stats" className="mt-6">
-              <StatsTab initialTransactions={transactions} players={players} initialDiceRolls={diceRolls} gameId={gameId} />
+              <StatsTab initialTransactions={transactions} players={players} gameId={gameId} />
             </TabsContent>
             <TabsContent value="stats2" className="mt-6">
-              <StatsTab initialTransactions={transactions} players={players} initialDiceRolls={diceRolls} gameId={gameId} />
+              <StatsDashboard initialTransactions={transactions} players={players} initialDiceRolls={diceRolls} gameId={gameId} />
             </TabsContent>
             <TabsContent value="advisor" className="mt-6">
               <RulesAdvisorTab />
