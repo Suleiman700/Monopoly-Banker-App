@@ -15,13 +15,13 @@ import { BankPaymentModal } from './BankPaymentModal';
 
 interface BankTabProps {
   initialPlayers: Player[];
-  initialSettings: GameSettings;
+  initialSettings?: GameSettings;
   gameId: string;
 }
 
 export function BankTab({ initialPlayers, initialSettings, gameId }: BankTabProps) {
   const [players, setPlayers] = useState<Player[]>(initialPlayers);
-  const [settings, setSettings] = useState<GameSettings>(initialSettings);
+  const [settings, setSettings] = useState<GameSettings>(initialSettings ?? { passGoAmount: 200, jailFee: 50, freeParkingAmount: 0 });
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [bankPaymentModalOpen, setBankPaymentModalOpen] = useState(false);
   const [editPlayerModalOpen, setEditPlayerModalOpen] = useState(false);
