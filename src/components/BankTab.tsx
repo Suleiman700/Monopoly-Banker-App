@@ -1,6 +1,6 @@
 'use client';
-import { useState, useEffect } from 'react';
-import type { Player, GameSettings } from '@/lib/types';
+import { useState, useEffect, useMemo } from 'react';
+import type { Player, GameSettings, Transaction } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
@@ -18,11 +18,13 @@ interface BankTabProps {
   initialPlayers: Player[];
   initialSettings: GameSettings;
   gameId: string;
+  initialTransactions: Transaction[];
 }
 
-export function BankTab({ initialPlayers, initialSettings, gameId }: BankTabProps) {
+export function BankTab({ initialPlayers, initialSettings, gameId, initialTransactions }: BankTabProps) {
   const [players, setPlayers] = useState<Player[]>(initialPlayers);
   const [settings, setSettings] = useState<GameSettings>(initialSettings);
+  const [transactions, setTransactions] = useState<Transaction[]>(initialTransactions);
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [bankPaymentModalOpen, setBankPaymentModalOpen] = useState(false);
   const [editPlayerModalOpen, setEditPlayerModalOpen] = useState(false);
@@ -34,11 +36,23 @@ export function BankTab({ initialPlayers, initialSettings, gameId }: BankTabProp
 
   useEffect(() => {
     setPlayers(initialPlayers);
-  }, [initialPlayers]);
+    setTransactions(initialTransactions);
+    setSettings(initialSettings);
+  }, [initialPlayers, initialTransactions, initialSettings]);
   
   const refreshData = async () => {
     router.refresh();
   };
+
+  const bankBalance = useMemo(() => {
+    const income = transactions
+      .filter(t => t.toPlayerId === 'bank')
+      .reduce((sum, t) => sum + t.amount, 0);
+    const outcome = transactions
+      .filter(t => t.fromPlayerId === 'bank')
+      .reduce((sum, t) => sum + t.amount, 0);
+    return income - outcome;
+  }, [transactions]);
 
   const handlePassGo = async (player: Player) => {
     try {
@@ -88,7 +102,7 @@ export function BankTab({ initialPlayers, initialSettings, gameId }: BankTabProp
           <div className="p-4 border rounded-lg shadow-sm flex justify-between items-center bg-secondary/30">
             <div>
               <p className="font-bold text-lg text-primary flex items-center gap-2"><University /> The Bank</p>
-              <p className="text-2xl font-mono">$&infin;</p>
+              <p className="text-2xl font-mono">${bankBalance.toLocaleString()}</p>
             </div>
              <DropdownMenu>
                 <DropdownMenuTrigger asChild>

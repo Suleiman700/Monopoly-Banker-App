@@ -62,7 +62,7 @@ export default async function GamePage({ params }: GamePageProps) {
               <TabsTrigger value="options" className="py-2"><Settings className="mr-2 h-5 w-5" />Options</TabsTrigger>
             </TabsList>
             <TabsContent value="bank" className="mt-6">
-              <BankTab initialPlayers={players} gameId={gameId} initialSettings={settings} />
+              <BankTab initialPlayers={players} gameId={gameId} initialSettings={settings} initialTransactions={transactions} />
             </TabsContent>
             <TabsContent value="trade" className="mt-6">
               <TradeTab gameId={gameId} initialPlayers={players} settings={settings} />
