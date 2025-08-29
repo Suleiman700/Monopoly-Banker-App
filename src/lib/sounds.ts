@@ -5,7 +5,9 @@ const playSound = (src: string, volume: number = 0.5) => {
         const audio = new Audio(src);
         audio.volume = volume;
         audio.play().catch(error => {
-            console.error("Audio playback failed:", error);
+            // A common error is the user not interacting with the page first.
+            // We can safely ignore this, as subsequent plays will likely work.
+            console.warn("Audio playback failed:", error);
         });
     }
 };

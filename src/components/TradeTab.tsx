@@ -119,7 +119,7 @@ export function TradeTab({ initialPlayers, gameId, settings }: TradeTabProps) {
                     )}
                   />
                   {player1 && (
-                     <div className="text-sm space-y-1">
+                     <div className="space-y-1">
                         <FormField
                           control={form.control}
                           name="player1Amount"
@@ -133,7 +133,7 @@ export function TradeTab({ initialPlayers, gameId, settings }: TradeTabProps) {
                             </FormItem>
                           )}
                         />
-                        <p>
+                        <p className="text-sm">
                           Balance:&nbsp;
                           <span className="font-mono text-muted-foreground">${player1.balance.toLocaleString()}</span>
                           <span className="font-bold"> &rarr; </span>
@@ -165,7 +165,7 @@ export function TradeTab({ initialPlayers, gameId, settings }: TradeTabProps) {
                     )}
                   />
                   {player2 && (
-                     <div className="text-sm space-y-1">
+                     <div className="space-y-1">
                         <FormField
                           control={form.control}
                           name="player2Amount"
@@ -179,7 +179,7 @@ export function TradeTab({ initialPlayers, gameId, settings }: TradeTabProps) {
                             </FormItem>
                           )}
                         />
-                        <p>
+                        <p className="text-sm">
                           Balance:&nbsp;
                           <span className="font-mono text-muted-foreground">${player2.balance.toLocaleString()}</span>
                            <span className="font-bold"> &rarr; </span>

@@ -32,10 +32,6 @@ export function OptionsTab({ gameId, initialSettings }: OptionsTabProps) {
         setIsDeleting(true);
         try {
             await deleteGame(gameId);
-            toast({
-                title: 'Game Deleted',
-                description: 'The game has been successfully deleted.',
-            });
             router.push('/');
         } catch (error) {
             toast({ variant: 'destructive', title: 'Error', description: 'Failed to delete the game.' });

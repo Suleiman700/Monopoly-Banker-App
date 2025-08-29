@@ -61,7 +61,6 @@ export function PaymentModal({ isOpen, setIsOpen, fromPlayer, allPlayers, gameId
   }, [reasonType, toPlayerId, settings, form]);
 
   const handleShortcutPayment = async (amount: number, reason: string) => {
-    form.setValue('toPlayerId', 'bank');
     form.setValue('amount', amount);
     form.setValue('reasonType', 'manual'); // Set to manual so the amount isn't locked
     form.setValue('reason', reason);
@@ -149,7 +148,7 @@ export function PaymentModal({ isOpen, setIsOpen, fromPlayer, allPlayers, gameId
                   </div>
               </div>
             )}
-
+            
             <FormField
               control={form.control}
               name="reasonType"
