@@ -4,13 +4,14 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import type { Player } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { makePayment } from '@/lib/db';
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from './ui/separator';
+import { Loader2 } from 'lucide-react';
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -25,6 +26,7 @@ const formSchema = z.object({
   toPlayerId: z.string().min(1, 'Please select a recipient.'),
   amount: z.coerce.number().positive('Amount must be positive.'),
   reason: z.string().optional(),
+  reasonType: z.string().min(1, 'Please select a reason type.'),
 });
 
 export function PaymentModal({ isOpen, setIsOpen, fromPlayer, allPlayers, gameId, onPaymentSuccess }: PaymentModalProps) {
@@ -35,12 +37,16 @@ export function PaymentModal({ isOpen, setIsOpen, fromPlayer, allPlayers, gameId
       amount: '' as unknown as number,
       toPlayerId: undefined,
       reason: '',
+      reasonType: 'manual',
     }
   });
+
+  const reasonType = form.watch('reasonType');
   
   const handleShortcutPayment = async (amount: number, reason: string) => {
     form.setValue('toPlayerId', 'bank');
     form.setValue('amount', amount);
+    form.setValue('reasonType', 'manual');
     form.setValue('reason', reason);
     await form.handleSubmit(onSubmit)();
   };
@@ -52,12 +58,14 @@ export function PaymentModal({ isOpen, setIsOpen, fromPlayer, allPlayers, gameId
           return;
       }
 
+      const finalReason = values.reasonType === 'manual' ? values.reason : values.reasonType;
+
       await makePayment({
         gameId,
         fromPlayerId: fromPlayer.id,
         toPlayerId: values.toPlayerId,
         amount: values.amount,
-        reason: values.reason || 'Payment',
+        reason: finalReason || 'Payment',
       });
       
       onPaymentSuccess();
@@ -93,13 +101,7 @@ export function PaymentModal({ isOpen, setIsOpen, fromPlayer, allPlayers, gameId
         <Separator />
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="flex justify-between items-center">
-              <p className="font-semibold text-sm text-muted-foreground">Custom Payment</p>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={() => form.setValue('reason', '')}>Manual</Button>
-                <Button variant="outline" size="sm" onClick={() => form.setValue('reason', 'Rent')}>Rent</Button>
-              </div>
-            </div>
+            <p className="font-semibold text-sm text-muted-foreground pt-2">Custom Payment</p>
             <FormField
               control={form.control}
               name="toPlayerId"
@@ -140,20 +142,49 @@ export function PaymentModal({ isOpen, setIsOpen, fromPlayer, allPlayers, gameId
             />
             <FormField
               control={form.control}
-              name="reason"
+              name="reasonType"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Reason (Optional)</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g., Rent for Boardwalk" {...field} />
-                  </FormControl>
+                  <FormLabel>Reason</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                     <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a reason" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="manual">Manual</SelectItem>
+                      <SelectItem value="Rent">Rent</SelectItem>
+                      <SelectItem value="Mortgage Property">Mortgage Property</SelectItem>
+                      <SelectItem value="Sell Property">Sell Property</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <div className="flex justify-end pt-2">
-              <Button type="submit">Confirm Payment</Button>
-            </div>
+            {reasonType === 'manual' && (
+              <FormField
+                control={form.control}
+                name="reason"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Manual Reason</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g., Rent for Boardwalk" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+            <DialogFooter className="pt-4">
+              <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>Cancel</Button>
+              <Button type="submit" disabled={form.formState.isSubmitting}>
+                {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Confirm Payment
+              </Button>
+            </DialogFooter>
           </form>
         </Form>
       </DialogContent>
