@@ -65,8 +65,8 @@ export function RulesAdvisorTab() {
              <Accordion type="single" collapsible className="w-full">
                 {results.map((result, index) => (
                     <AccordionItem value={`item-${index}`} key={index}>
-                        <AccordionTrigger className="font-headline text-lg hover:no-underline">{result.title}</AccordionTrigger>
-                        <AccordionContent>
+                        <AccordionTrigger className="font-headline text-lg hover:no-underline" dir={result.isRtl ? 'rtl' : 'ltr'}>{result.title}</AccordionTrigger>
+                        <AccordionContent dir={result.isRtl ? 'rtl' : 'ltr'}>
                            <div className="space-y-4 pt-2">
                               <div>
                                 <h4 className="font-semibold text-base">Resolution:</h4>
