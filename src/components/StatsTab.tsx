@@ -5,7 +5,6 @@ import type { Transaction, Player, DiceRoll } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ScrollArea } from './ui/scroll-area';
 import { Button } from './ui/button';
 import { Undo, Loader2 } from 'lucide-react';
 import { undoTransaction } from '@/lib/db';
@@ -169,17 +168,19 @@ export function StatsTab({ initialTransactions, players, initialDiceRolls, gameI
           </CardHeader>
           <CardContent>
             <ChartContainer config={chartConfig} className="h-[300px] w-full">
-              <LineChart data={filteredData.balanceHistory} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="transactionIndex" label={{ value: 'Transactions', position: 'insideBottom', offset: -5 }} />
-                <YAxis />
-                <Tooltip content={<ChartTooltipContent />} />
-                <Legend content={<ChartLegendContent />} />
-                {players.map(p => (
-                   (selectedPlayerId === 'all' || selectedPlayerId === p.id) &&
-                    <Line key={p.id} type="monotone" dataKey={p.id} stroke={chartConfig[p.id]?.color} name={p.name} dot={false} />
-                ))}
-              </LineChart>
+              <ResponsiveContainer>
+                <LineChart data={filteredData.balanceHistory} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="transactionIndex" label={{ value: 'Transactions', position: 'insideBottom', offset: -5 }} />
+                  <YAxis />
+                  <Tooltip content={<ChartTooltipContent />} />
+                  <Legend content={<ChartLegendContent />} />
+                  {players.map(p => (
+                    (selectedPlayerId === 'all' || selectedPlayerId === p.id) &&
+                      <Line key={p.id} type="monotone" dataKey={p.id} stroke={chartConfig[p.id]?.color} name={p.name} dot={false} />
+                  ))}
+                </LineChart>
+              </ResponsiveContainer>
             </ChartContainer>
           </CardContent>
         </Card>
@@ -191,15 +192,17 @@ export function StatsTab({ initialTransactions, players, initialDiceRolls, gameI
           </CardHeader>
           <CardContent>
              <ChartContainer config={chartConfig} className="h-[300px] w-full">
-                <BarChart data={filteredData.incomeOutcome} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip content={<ChartTooltipContent indicator="dot" />} />
-                    <Legend content={<ChartLegendContent />} />
-                    <Bar dataKey="income" fill={chartConfig.income.color} radius={4} />
-                    <Bar dataKey="outcome" fill={chartConfig.outcome.color} radius={4} />
-                </BarChart>
+               <ResponsiveContainer>
+                  <BarChart data={filteredData.incomeOutcome} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" />
+                      <YAxis />
+                      <Tooltip content={<ChartTooltipContent indicator="dot" />} />
+                      <Legend content={<ChartLegendContent />} />
+                      <Bar dataKey="income" fill={chartConfig.income.color} radius={4} />
+                      <Bar dataKey="outcome" fill={chartConfig.outcome.color} radius={4} />
+                  </BarChart>
+                </ResponsiveContainer>
             </ChartContainer>
           </CardContent>
         </Card>
@@ -224,7 +227,7 @@ export function StatsTab({ initialTransactions, players, initialDiceRolls, gameI
           </Select>
         </CardHeader>
         <CardContent>
-          <ScrollArea className="h-[300px] border rounded-md">
+          <div className="border rounded-md">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -267,7 +270,7 @@ export function StatsTab({ initialTransactions, players, initialDiceRolls, gameI
                 )}
               </TableBody>
             </Table>
-          </ScrollArea>
+          </div>
         </CardContent>
       </Card>
     </div>
