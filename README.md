@@ -3,8 +3,16 @@
 Banker's Best Friend is a modern, web-based application designed to be the ultimate companion for your Monopoly game nights. It replaces the need for paper money and a manual banker with a seamless digital interface, and enhances the experience with powerful AI-driven features.
 
 <img src="/public/images/thumbnail.png" alt="drawing" width="400"/>
+<img width="200" height="811" alt="chrome_KY8iw4wQmf" src="https://github.com/user-attachments/assets/6495eb06-e00d-4c9d-9424-a37f2fbae74d" />
+<img width="200" height="811" alt="chrome_2qSxH8pmJs" src="https://github.com/user-attachments/assets/13d403cb-a2dd-4266-ac2b-99e61e4d9965" />
+<img width="200" height="811" alt="chrome_Py64i0CD78" src="https://github.com/user-attachments/assets/a291c03d-9b3d-411e-b1fd-d1cc0e1ae918" />
+<img width="200" height="811" alt="chrome_qDlWszg3Bb" src="https://github.com/user-attachments/assets/49db2d5a-d4d0-4ef0-9b30-098126ee0884" />
+<img width="200" height="811" alt="chrome_tDMfD2x7iP" src="https://github.com/user-attachments/assets/8b9e2c74-1b54-4bfb-963d-a963a5154b05" />
+<img width="200" height="811" alt="chrome_Et9GBMmo2r" src="https://github.com/user-attachments/assets/ed09cda3-c341-4599-ad63-b4928cfade45" />
+
 
 ## Key Features
+
 
 - **Digital Banking:** Easily manage balances for all players and the bank. No more fumbling with paper money!
 - **Transaction & Trade Logging:** A full history of all payments is recorded. Execute and log cash trades between players with ease.
