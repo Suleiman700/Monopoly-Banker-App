@@ -72,10 +72,7 @@ export function TradeTab({ initialPlayers, gameId }: TradeTabProps) {
       await executeTrade({ gameId, ...values });
       form.reset();
       router.refresh();
-      toast({
-        title: 'Trade Successful',
-        description: 'Player balances have been updated.',
-      });
+      
     } catch (error) {
       toast({
         variant: 'destructive',
@@ -118,7 +115,6 @@ export function TradeTab({ initialPlayers, gameId }: TradeTabProps) {
                   />
                   {player1 && (
                      <div className="text-sm space-y-1">
-                        <p>Current Balance: <span className="font-mono">${player1.balance.toLocaleString()}</span></p>
                         <FormField
                           control={form.control}
                           name="player1Amount"
@@ -132,7 +128,12 @@ export function TradeTab({ initialPlayers, gameId }: TradeTabProps) {
                             </FormItem>
                           )}
                         />
-                        <p>New Balance: <span className="font-mono font-bold">${player1NewBalance?.toLocaleString()}</span></p>
+                        <p>
+                          Balance:&nbsp;
+                          <span className="font-mono text-muted-foreground">${player1.balance.toLocaleString()}</span>
+                          <span className="font-bold"> &rarr; </span>
+                          <span className="font-mono font-bold text-primary">${player1NewBalance?.toLocaleString()}</span>
+                        </p>
                     </div>
                   )}
               </div>
@@ -160,7 +161,6 @@ export function TradeTab({ initialPlayers, gameId }: TradeTabProps) {
                   />
                   {player2 && (
                      <div className="text-sm space-y-1">
-                        <p>Current Balance: <span className="font-mono">${player2.balance.toLocaleString()}</span></p>
                         <FormField
                           control={form.control}
                           name="player2Amount"
@@ -174,7 +174,12 @@ export function TradeTab({ initialPlayers, gameId }: TradeTabProps) {
                             </FormItem>
                           )}
                         />
-                        <p>New Balance: <span className="font-mono font-bold">${player2NewBalance?.toLocaleString()}</span></p>
+                        <p>
+                          Balance:&nbsp;
+                          <span className="font-mono text-muted-foreground">${player2.balance.toLocaleString()}</span>
+                           <span className="font-bold"> &rarr; </span>
+                          <span className="font-mono font-bold text-primary">${player2NewBalance?.toLocaleString()}</span>
+                        </p>
                     </div>
                   )}
               </div>
