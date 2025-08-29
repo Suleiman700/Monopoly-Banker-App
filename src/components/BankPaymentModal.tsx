@@ -50,6 +50,8 @@ export function BankPaymentModal({ isOpen, setIsOpen, allPlayers, gameId, onPaym
     } else if (reasonType === 'Free Parking' && settings.freeParkingAmount > 0) {
       form.setValue('amount', settings.freeParkingAmount);
        form.setValue('reason', 'Free Parking');
+    } else if (reasonType === 'manual') {
+      form.setValue('reason', '');
     }
   }, [reasonType, settings, form]);
 
