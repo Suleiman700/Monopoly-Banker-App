@@ -152,7 +152,7 @@ export function BankTab({ initialPlayers, initialSettings, gameId, initialTransa
           />
       </CardContent>
       <CardFooter className="flex-col sm:flex-row gap-2 pt-6">
-         <Button onClick={() => setPaymentModalOpen(true)}>
+         <Button size="lg" onClick={() => setPaymentModalOpen(true)}>
             <HandCoins className="mr-2"/> Make a Payment
         </Button>
         <Button variant="outline" onClick={() => handleOpenMassPaymentModal('give')}>
