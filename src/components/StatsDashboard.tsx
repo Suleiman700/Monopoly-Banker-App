@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from './ui/button';
-import { Undo, Loader2, Repeat, TrendingUp, PiggyBank, Landmark } from 'lucide-react';
+import { Undo, Loader2, Repeat, TrendingUp, PiggyBank, Landmark, ArrowDown, ArrowUp } from 'lucide-react';
 import { undoTransaction } from '@/lib/db';
 import { useToast } from "@/hooks/use-toast";
 import { Bar, BarChart, Line, LineChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
@@ -88,6 +88,31 @@ export function StatsDashboard({ initialTransactions, players, gameId, initialDi
     });
     return Array.from(counts.entries()).map(([total, count]) => ({ name: total.toString(), rolls: count }));
   }, [diceRolls]);
+  
+  const categorizedStats = useMemo(() => {
+    if (selectedPlayerId === 'all') return null;
+
+    const income: Record<string, number> = {};
+    const outcome: Record<string, number> = {};
+
+    transactions.forEach(t => {
+        const reason = t.reason || 'Uncategorized';
+        if (t.toPlayerId === selectedPlayerId) {
+            income[reason] = (income[reason] || 0) + t.amount;
+        }
+        if (t.fromPlayerId === selectedPlayerId) {
+            outcome[reason] = (outcome[reason] || 0) + t.amount;
+        }
+    });
+
+    const format = (data: Record<string, number>) => Object.entries(data).map(([reason, amount]) => ({reason, amount})).sort((a,b) => b.amount - a.amount);
+
+    return {
+        income: format(income),
+        outcome: format(outcome),
+        playerName: getPlayerName(selectedPlayerId)
+    }
+  }, [selectedPlayerId, transactions, players]);
 
   const filteredTransactions = useMemo(() => {
     const isPlayerSpecific = selectedPlayerId !== 'all';
@@ -187,6 +212,44 @@ export function StatsDashboard({ initialTransactions, players, gameId, initialDi
           </Select>
         </CardHeader>
         <CardContent>
+            {categorizedStats && (
+                <div className="mb-6 grid gap-6 md:grid-cols-2 animate-in fade-in">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2 text-lg text-green-600"><ArrowDown/> Income Breakdown for {categorizedStats.playerName}</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                             {categorizedStats.income.length > 0 ? (
+                                <ul className="space-y-2 text-sm">
+                                    {categorizedStats.income.map(item => (
+                                        <li key={item.reason} className="flex justify-between items-center">
+                                            <span className="text-muted-foreground">{item.reason}</span>
+                                            <span className="font-medium">${item.amount.toLocaleString()}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                             ) : <p className="text-sm text-muted-foreground">No income recorded.</p> }
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardHeader>
+                           <CardTitle className="flex items-center gap-2 text-lg text-red-600"><ArrowUp/> Outcome Breakdown for {categorizedStats.playerName}</CardTitle>
+                        </CardHeader>
+                         <CardContent>
+                             {categorizedStats.outcome.length > 0 ? (
+                                <ul className="space-y-2 text-sm">
+                                    {categorizedStats.outcome.map(item => (
+                                        <li key={item.reason} className="flex justify-between items-center">
+                                            <span className="text-muted-foreground">{item.reason}</span>
+                                            <span className="font-medium">${item.amount.toLocaleString()}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                             ) : <p className="text-sm text-muted-foreground">No outcome recorded.</p> }
+                        </CardContent>
+                    </Card>
+                </div>
+            )}
           <div className="border rounded-md">
             <Table>
               <TableHeader>
