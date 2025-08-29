@@ -302,15 +302,24 @@ export async function takeFromAllPlayers(gameId: string, amount: number, reason:
 }
 
 export async function undoTransaction(gameId: string, transactionId: string): Promise<void> {
+    console.log('[undoTransaction] START: gameId:', gameId, 'transactionId:', transactionId);
+    if (!gameId) {
+        console.error('[undoTransaction] ERROR: gameId is missing or undefined.');
+        throw new Error('gameId is not defined');
+    }
     const game = await getGameById(gameId);
     if (!game) {
+        console.error('[undoTransaction] ERROR: Game not found for gameId:', gameId);
         throw new Error('Game not found');
     }
+    console.log('[undoTransaction] Found game:', game.id);
 
     const transactionIndex = game.transactions.findIndex(t => t.id === transactionId);
     if (transactionIndex === -1) {
+        console.error('[undoTransaction] ERROR: Transaction not found for transactionId:', transactionId);
         throw new Error('Transaction not found');
     }
+    console.log('[undoTransaction] Found transaction at index:', transactionIndex);
 
     const transaction = game.transactions[transactionIndex];
     const { fromPlayerId, toPlayerId, amount } = transaction;
@@ -321,13 +330,17 @@ export async function undoTransaction(gameId: string, transactionId: string): Pr
 
     if (fromPlayer) {
         fromPlayer.balance += amount;
+        console.log(`[undoTransaction] Reverted fromPlayer ${fromPlayer.id}: balance is now ${fromPlayer.balance}`);
     }
     if (toPlayer) {
         toPlayer.balance -= amount;
+        console.log(`[undoTransaction] Reverted toPlayer ${toPlayer.id}: balance is now ${toPlayer.balance}`);
     }
     
     // Remove the transaction
     game.transactions.splice(transactionIndex, 1);
+    console.log('[undoTransaction] Removed transaction from history.');
 
     await writeGame(game);
+    console.log('[undoTransaction] END: Successfully wrote updated game file.');
 }
