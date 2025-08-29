@@ -44,7 +44,7 @@ export function DiceTab({ gameId, settings }: DiceTabProps) {
       playDiceSound();
     }
     // Simulate rolling animation
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise(resolve => setTimeout(resolve, 300));
     
     const date = new Date();
     const seconds = date.getSeconds();
