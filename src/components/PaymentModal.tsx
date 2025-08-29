@@ -95,7 +95,10 @@ export function PaymentModal({ isOpen, setIsOpen, fromPlayer, allPlayers, gameId
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <div className="flex justify-between items-center">
               <p className="font-semibold text-sm text-muted-foreground">Custom Payment</p>
-              <Button variant="outline" size="sm" onClick={() => form.setValue('reason', 'Rent')}>Rent</Button>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={() => form.setValue('reason', '')}>Manual</Button>
+                <Button variant="outline" size="sm" onClick={() => form.setValue('reason', 'Rent')}>Rent</Button>
+              </div>
             </div>
             <FormField
               control={form.control}
