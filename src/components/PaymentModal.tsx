@@ -34,7 +34,7 @@ export function PaymentModal({ isOpen, setIsOpen, fromPlayer, allPlayers, gameId
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      amount: '' as unknown as number,
+      amount: undefined,
       toPlayerId: undefined,
       reason: '',
       reasonType: 'manual',
@@ -42,6 +42,7 @@ export function PaymentModal({ isOpen, setIsOpen, fromPlayer, allPlayers, gameId
   });
 
   const reasonType = form.watch('reasonType');
+  const toPlayerId = form.watch('toPlayerId');
   
   const handleShortcutPayment = async (amount: number, reason: string) => {
     form.setValue('toPlayerId', 'bank');
@@ -108,7 +109,11 @@ export function PaymentModal({ isOpen, setIsOpen, fromPlayer, allPlayers, gameId
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>To</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={(value) => {
+                    field.onChange(value);
+                    form.setValue('reasonType', 'manual');
+                    form.setValue('reason', '');
+                  }} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select a player or bank" />
@@ -134,7 +139,7 @@ export function PaymentModal({ isOpen, setIsOpen, fromPlayer, allPlayers, gameId
                 <FormItem>
                   <FormLabel>Amount</FormLabel>
                   <FormControl>
-                    <Input type="number" placeholder="e.g., 200" {...field} onChange={(e) => field.onChange(e.target.valueAsNumber)} />
+                    <Input type="number" placeholder="e.g., 200" {...field} value={field.value ?? ''} onChange={(e) => field.onChange(e.target.valueAsNumber || undefined)} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -146,7 +151,7 @@ export function PaymentModal({ isOpen, setIsOpen, fromPlayer, allPlayers, gameId
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Reason</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value}>
                      <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select a reason" />
@@ -154,9 +159,19 @@ export function PaymentModal({ isOpen, setIsOpen, fromPlayer, allPlayers, gameId
                     </FormControl>
                     <SelectContent>
                       <SelectItem value="manual">Manual</SelectItem>
-                      <SelectItem value="Rent">Rent</SelectItem>
-                      <SelectItem value="Mortgage Property">Mortgage Property</SelectItem>
-                      <SelectItem value="Sell Property">Sell Property</SelectItem>
+                      {toPlayerId === 'bank' ? (
+                        <>
+                          <SelectItem value="Jail Fee">Jail Fee</SelectItem>
+                          <SelectItem value="Income Tax">Income Tax</SelectItem>
+                          <SelectItem value="Luxury Tax">Luxury Tax</SelectItem>
+                        </>
+                      ) : (
+                        <>
+                          <SelectItem value="Rent">Rent</SelectItem>
+                          <SelectItem value="Mortgage Property">Mortgage Property</SelectItem>
+                          <SelectItem value="Sell Property">Sell Property</SelectItem>
+                        </>
+                      )}
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -171,7 +186,7 @@ export function PaymentModal({ isOpen, setIsOpen, fromPlayer, allPlayers, gameId
                   <FormItem>
                     <FormLabel>Manual Reason</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., Rent for Boardwalk" {...field} />
+                      <Input placeholder="e.g., Rent for Boardwalk" {...field} value={field.value ?? ''}/>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
