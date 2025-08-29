@@ -4,13 +4,14 @@ import type { Player } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { MoreVertical, Landmark, ArrowUpCircle, Pencil, Banknote, PiggyBank } from 'lucide-react';
+import { MoreVertical, Landmark, ArrowUpCircle, Pencil, Banknote, PiggyBank, University } from 'lucide-react';
 import { PaymentModal } from './PaymentModal';
-import { passGo, getPlayersByGameId } from '@/lib/db';
+import { passGo, getPlayersByGameId, makePayment } from '@/lib/db';
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from 'next/navigation';
 import { EditPlayerModal } from './EditPlayerModal';
 import { MassPaymentModal } from './MassPaymentModal';
+import { BankPaymentModal } from './BankPaymentModal';
 
 interface BankTabProps {
   initialPlayers: Player[];
@@ -20,6 +21,7 @@ interface BankTabProps {
 export function BankTab({ initialPlayers, gameId }: BankTabProps) {
   const [players, setPlayers] = useState<Player[]>(initialPlayers);
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [bankPaymentModalOpen, setBankPaymentModalOpen] = useState(false);
   const [editPlayerModalOpen, setEditPlayerModalOpen] = useState(false);
   const [massPaymentModalOpen, setMassPaymentModalOpen] = useState(false);
   const [massPaymentType, setMassPaymentType] = useState<'give' | 'take'>('give');
@@ -50,6 +52,10 @@ export function BankTab({ initialPlayers, gameId }: BankTabProps) {
     setSelectedPlayer(player);
     setPaymentModalOpen(true);
   };
+
+  const handleOpenBankPaymentModal = () => {
+    setBankPaymentModalOpen(true);
+  };
   
   const handleOpenEditPlayerModal = (player: Player) => {
     setSelectedPlayer(player);
@@ -69,11 +75,35 @@ export function BankTab({ initialPlayers, gameId }: BankTabProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="font-headline">Player Balances</CardTitle>
-        <CardDescription>Manage player funds and transactions.</CardDescription>
+        <CardTitle className="font-headline">Player & Bank Balances</CardTitle>
+        <CardDescription>Manage player funds and bank transactions.</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          
+          {/* Bank Card */}
+          <div className="p-4 border rounded-lg shadow-sm flex justify-between items-center bg-secondary/30">
+            <div>
+              <p className="font-bold text-lg text-primary flex items-center gap-2"><University /> The Bank</p>
+              <p className="text-2xl font-mono">$&infin;</p>
+            </div>
+             <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon">
+                    <MoreVertical className="h-5 w-5" />
+                    <span className="sr-only">Bank Actions</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onSelect={handleOpenBankPaymentModal}>
+                    <Landmark className="mr-2 h-4 w-4" />
+                    <span>Pay Player...</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+          </div>
+          
+          {/* Player Cards */}
           {players.map(player => (
             <div key={player.id} className="p-4 border rounded-lg shadow-sm flex justify-between items-center bg-card">
               <div>
@@ -115,6 +145,13 @@ export function BankTab({ initialPlayers, gameId }: BankTabProps) {
             onPaymentSuccess={handleSuccess}
           />
         )}
+        <BankPaymentModal
+            isOpen={bankPaymentModalOpen}
+            setIsOpen={setBankPaymentModalOpen}
+            allPlayers={players}
+            gameId={gameId}
+            onPaymentSuccess={handleSuccess}
+        />
         {selectedPlayer && (
           <EditPlayerModal
             isOpen={editPlayerModalOpen}
