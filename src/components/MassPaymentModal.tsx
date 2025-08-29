@@ -9,6 +9,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { giveToAllPlayers, takeFromAllPlayers } from '@/lib/db';
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from 'lucide-react';
+import { playPaymentSound } from '@/lib/sounds';
+import type { GameSettings } from '@/lib/types';
 
 interface MassPaymentModalProps {
   isOpen: boolean;
@@ -16,6 +18,7 @@ interface MassPaymentModalProps {
   gameId: string;
   onSuccess: () => void;
   type: 'give' | 'take';
+  settings: GameSettings;
 }
 
 const formSchema = z.object({
@@ -23,7 +26,7 @@ const formSchema = z.object({
   reason: z.string().min(1, 'Reason is required.'),
 });
 
-export function MassPaymentModal({ isOpen, setIsOpen, gameId, onSuccess, type }: MassPaymentModalProps) {
+export function MassPaymentModal({ isOpen, setIsOpen, gameId, onSuccess, type, settings }: MassPaymentModalProps) {
   const { toast } = useToast();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -39,6 +42,9 @@ export function MassPaymentModal({ isOpen, setIsOpen, gameId, onSuccess, type }:
         await giveToAllPlayers(gameId, values.amount, values.reason);
       } else {
         await takeFromAllPlayers(gameId, values.amount, values.reason);
+      }
+      if (settings.soundsEnabled) {
+        playPaymentSound();
       }
       onSuccess();
       setIsOpen(false);

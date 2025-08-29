@@ -12,16 +12,17 @@ import { useRouter } from 'next/navigation';
 import { EditPlayerModal } from './EditPlayerModal';
 import { MassPaymentModal } from './MassPaymentModal';
 import { BankPaymentModal } from './BankPaymentModal';
+import { playPassGoSound } from '@/lib/sounds';
 
 interface BankTabProps {
   initialPlayers: Player[];
-  initialSettings?: GameSettings;
+  initialSettings: GameSettings;
   gameId: string;
 }
 
 export function BankTab({ initialPlayers, initialSettings, gameId }: BankTabProps) {
   const [players, setPlayers] = useState<Player[]>(initialPlayers);
-  const [settings, setSettings] = useState<GameSettings>(initialSettings ?? { passGoAmount: 200, jailFee: 50, freeParkingAmount: 0 });
+  const [settings, setSettings] = useState<GameSettings>(initialSettings);
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [bankPaymentModalOpen, setBankPaymentModalOpen] = useState(false);
   const [editPlayerModalOpen, setEditPlayerModalOpen] = useState(false);
@@ -32,16 +33,15 @@ export function BankTab({ initialPlayers, initialSettings, gameId }: BankTabProp
   const router = useRouter();
 
   const refreshData = async () => {
-    // In a real app, you'd fetch both players and settings
-    const updatedPlayers = await getPlayersByGameId(gameId);
-    setPlayers(updatedPlayers);
-    // For now, we just refresh the router, which will refetch server props
     router.refresh();
   };
 
   const handlePassGo = async (player: Player) => {
     try {
       await passGo(player.id, gameId);
+      if (settings.soundsEnabled) {
+        playPassGoSound();
+      }
       await refreshData();
     } catch (error) {
       toast({ variant: 'destructive', title: 'Error', description: (error as Error).message });
@@ -168,6 +168,7 @@ export function BankTab({ initialPlayers, initialSettings, gameId }: BankTabProp
             gameId={gameId}
             onSuccess={handleSuccess}
             type={massPaymentType}
+            settings={settings}
           />
       </CardContent>
       <CardFooter className="flex-col sm:flex-row gap-2 pt-6">

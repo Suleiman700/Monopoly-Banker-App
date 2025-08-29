@@ -4,12 +4,15 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { deleteGame, resetGame } from '@/lib/db';
+import { deleteGame, resetGame, updateGameSettings } from '@/lib/db';
 import { useToast } from "@/hooks/use-toast";
-import { Trash2, RefreshCcw, Loader2, Settings2, Palette } from 'lucide-react';
+import { Trash2, RefreshCcw, Loader2, Settings2, Palette, Music } from 'lucide-react';
 import type { GameSettings } from '@/lib/types';
 import { GameSettingsModal } from './GameSettingsModal';
 import { ThemeSelectionModal } from './ThemeSelectionModal';
+import { Switch } from "@/components/ui/switch"
+import { Label } from "@/components/ui/label"
+
 
 interface OptionsTabProps {
     gameId: string;
@@ -23,6 +26,7 @@ export function OptionsTab({ gameId, initialSettings }: OptionsTabProps) {
     const [isResetting, setIsResetting] = useState(false);
     const [settingsModalOpen, setSettingsModalOpen] = useState(false);
     const [themeModalOpen, setThemeModalOpen] = useState(false);
+    const [soundsEnabled, setSoundsEnabled] = useState(initialSettings.soundsEnabled ?? true);
 
     const handleDelete = async () => {
         setIsDeleting(true);
@@ -43,10 +47,6 @@ export function OptionsTab({ gameId, initialSettings }: OptionsTabProps) {
         setIsResetting(true);
         try {
             await resetGame(gameId);
-            toast({
-                title: 'Game Reset',
-                description: 'The game has been reset to its initial state.',
-            });
             router.refresh();
         } catch (error) {
             toast({ variant: 'destructive', title: 'Error', description: 'Failed to reset the game.' });
@@ -56,12 +56,19 @@ export function OptionsTab({ gameId, initialSettings }: OptionsTabProps) {
     };
 
     const handleSettingsUpdated = () => {
-        toast({
-            title: 'Settings Saved',
-            description: 'Your new settings have been saved.',
-        });
         router.refresh();
     }
+
+    const handleSoundToggle = async (enabled: boolean) => {
+        setSoundsEnabled(enabled);
+        try {
+            await updateGameSettings(gameId, { ...initialSettings, soundsEnabled: enabled });
+        } catch (error) {
+            setSoundsEnabled(!enabled); // Revert on error
+            toast({ variant: 'destructive', title: 'Error', description: 'Failed to save sound settings.' });
+        }
+    };
+
 
     return (
         <>
@@ -71,6 +78,23 @@ export function OptionsTab({ gameId, initialSettings }: OptionsTabProps) {
                     <CardDescription>Manage the overall state of this game session.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                    <div className="p-4 border rounded-lg flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-secondary/30">
+                        <div>
+                            <h3 className="font-semibold text-lg flex items-center gap-2"><Music /> Game Sounds</h3>
+                            <p className="text-sm text-muted-foreground pl-7">
+                                Enable or disable sound effects for actions like dice rolls and payments.
+                            </p>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <Switch
+                                id="sound-switch"
+                                checked={soundsEnabled}
+                                onCheckedChange={handleSoundToggle}
+                            />
+                            <Label htmlFor="sound-switch">{soundsEnabled ? "On" : "Off"}</Label>
+                        </div>
+                    </div>
+
                      <div className="p-4 border rounded-lg flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-secondary/30">
                         <div>
                             <h3 className="font-semibold text-lg">Customize Amounts</h3>

@@ -65,10 +65,10 @@ export default async function GamePage({ params }: GamePageProps) {
               <BankTab initialPlayers={players} gameId={gameId} initialSettings={settings} />
             </TabsContent>
             <TabsContent value="trade" className="mt-6">
-              <TradeTab gameId={gameId} initialPlayers={players} />
+              <TradeTab gameId={gameId} initialPlayers={players} settings={settings} />
             </TabsContent>
             <TabsContent value="dice" className="mt-6">
-              <DiceTab gameId={gameId} />
+              <DiceTab gameId={gameId} settings={settings} />
             </TabsContent>
             <TabsContent value="stats" className="mt-6">
               <StatsTab initialTransactions={transactions} players={players} initialDiceRolls={diceRolls} gameId={gameId} />

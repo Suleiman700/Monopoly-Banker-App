@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Dices, Loader2 } from 'lucide-react';
 import { recordDiceRoll } from '@/lib/db';
-import { useToast } from "@/hooks/use-toast";
+import { playDiceSound } from '@/lib/sounds';
+import type { GameSettings } from '@/lib/types';
 
 const DiceFace = ({ value }: { value: number }) => {
     return (
@@ -22,12 +23,16 @@ const DiceFace = ({ value }: { value: number }) => {
     );
 };
 
-export function DiceTab({ gameId }: { gameId: string }) {
+interface DiceTabProps {
+  gameId: string;
+  settings: GameSettings;
+}
+
+export function DiceTab({ gameId, settings }: DiceTabProps) {
   const [dice, setDice] = useState<[number, number] | null>(null);
   const [total, setTotal] = useState<number | null>(null);
   const [lastRollMethod, setLastRollMethod] = useState<'multiply' | 'add'>('multiply');
   const [isRolling, setIsRolling] = useState(false);
-  const { toast } = useToast();
   const router = useRouter();
 
   const rollDice = async () => {
@@ -35,8 +40,11 @@ export function DiceTab({ gameId }: { gameId: string }) {
     setDice(null);
     setTotal(null);
     
+    if (settings.soundsEnabled) {
+      playDiceSound();
+    }
     // Simulate rolling animation
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise(resolve => setTimeout(resolve, 500));
     
     const date = new Date();
     const seconds = date.getSeconds();

@@ -35,6 +35,7 @@ export interface GameSettings {
   passGoAmount: number;
   freeParkingAmount: number;
   theme: ThemeColors;
+  soundsEnabled?: boolean;
 }
 
 export interface Game {

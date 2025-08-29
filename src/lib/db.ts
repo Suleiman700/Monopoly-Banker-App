@@ -103,7 +103,8 @@ export async function createGame(
         primary: '180 100% 25%',
         accent: '204 70% 67%',
         background: '180 60% 96%',
-      }
+      },
+      soundsEnabled: true,
     },
   };
 

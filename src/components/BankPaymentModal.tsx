@@ -12,6 +12,7 @@ import { makePayment } from '@/lib/db';
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from 'lucide-react';
 import { useEffect } from 'react';
+import { playPaymentSound } from '@/lib/sounds';
 
 interface BankPaymentModalProps {
   isOpen: boolean;
@@ -66,6 +67,9 @@ export function BankPaymentModal({ isOpen, setIsOpen, allPlayers, gameId, onPaym
         reason: values.reasonType === 'manual' ? values.reason : values.reasonType,
       });
       
+      if (settings.soundsEnabled) {
+        playPaymentSound();
+      }
       onPaymentSuccess();
       
       setIsOpen(false);

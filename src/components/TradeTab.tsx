@@ -10,13 +10,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { Loader2, ArrowRightLeft, User, Banknote } from 'lucide-react';
 import { executeTrade } from '@/lib/db';
-import type { Player } from '@/lib/types';
+import type { Player, GameSettings } from '@/lib/types';
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from 'next/navigation';
+import { playPaymentSound } from '@/lib/sounds';
 
 interface TradeTabProps {
   initialPlayers: Player[];
   gameId: string;
+  settings: GameSettings;
 }
 
 const formSchema = z.object({
@@ -31,7 +33,7 @@ const formSchema = z.object({
 });
 
 
-export function TradeTab({ initialPlayers, gameId }: TradeTabProps) {
+export function TradeTab({ initialPlayers, gameId, settings }: TradeTabProps) {
   const [players, setPlayers] = useState(initialPlayers);
   const { toast } = useToast();
   const router = useRouter();
@@ -70,6 +72,9 @@ export function TradeTab({ initialPlayers, gameId }: TradeTabProps) {
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
       await executeTrade({ gameId, ...values });
+      if (settings.soundsEnabled) {
+        playPaymentSound();
+      }
       form.reset();
       router.refresh();
       
