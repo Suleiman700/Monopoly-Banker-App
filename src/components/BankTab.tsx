@@ -1,12 +1,12 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { Player, GameSettings } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { MoreVertical, Landmark, ArrowUpCircle, Pencil, Banknote, PiggyBank, University } from 'lucide-react';
 import { PaymentModal } from './PaymentModal';
-import { passGo, getPlayersByGameId } from '@/lib/db';
+import { passGo } from '@/lib/db';
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from 'next/navigation';
 import { EditPlayerModal } from './EditPlayerModal';
@@ -32,6 +32,10 @@ export function BankTab({ initialPlayers, initialSettings, gameId }: BankTabProp
   const { toast } = useToast();
   const router = useRouter();
 
+  useEffect(() => {
+    setPlayers(initialPlayers);
+  }, [initialPlayers]);
+  
   const refreshData = async () => {
     router.refresh();
   };
