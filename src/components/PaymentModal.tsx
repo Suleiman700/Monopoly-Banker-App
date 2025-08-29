@@ -10,7 +10,6 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { makePayment } from '@/lib/db';
 import { useToast } from "@/hooks/use-toast";
-import { Separator } from './ui/separator';
 import { Loader2 } from 'lucide-react';
 import { useEffect } from 'react';
 
@@ -50,19 +49,20 @@ export function PaymentModal({ isOpen, setIsOpen, fromPlayer, allPlayers, gameId
     if(toPlayerId === 'bank' && (reasonType === 'Jail Fee' || reasonType === 'Income Tax' || reasonType === 'Luxury Tax')) {
        let amount = 0;
        if (reasonType === 'Jail Fee') amount = settings.jailFee;
-       // These could also come from settings in the future
-       if (reasonType === 'Income Tax') amount = 100;
-       if (reasonType === 'Luxury Tax') amount = 200;
+       if (reasonType === 'Income Tax') amount = 100; // These could also come from settings
+       if (reasonType === 'Luxury Tax') amount = 200; // These could also come from settings
        form.setValue('amount', amount);
        form.setValue('reason', reasonType);
+    } else if (reasonType === 'manual') {
+      form.setValue('reason', '');
+      form.setValue('amount', '' as unknown as number);
     }
   }, [reasonType, toPlayerId, settings, form]);
 
-  
   const handleShortcutPayment = async (amount: number, reason: string) => {
     form.setValue('toPlayerId', 'bank');
     form.setValue('amount', amount);
-    form.setValue('reasonType', 'manual');
+    form.setValue('reasonType', 'manual'); // Set to manual so the amount isn't locked
     form.setValue('reason', reason);
     await form.handleSubmit(onSubmit)();
   };
@@ -101,18 +101,9 @@ export function PaymentModal({ isOpen, setIsOpen, fromPlayer, allPlayers, gameId
           <DialogTitle className="font-headline text-2xl">Make a Payment</DialogTitle>
           <DialogDescription>From: {fromPlayer.name} (Balance: ${fromPlayer.balance.toLocaleString()})</DialogDescription>
         </DialogHeader>
-        <div className="space-y-3 py-2">
-            <p className="font-semibold text-sm text-muted-foreground">Pay to Bank (Shortcuts)</p>
-            <div className="flex flex-wrap gap-2">
-                <Button variant="outline" size="sm" onClick={() => handleShortcutPayment(settings.jailFee, 'Jail Fee')}>Jail Fee (${settings.jailFee})</Button>
-                <Button variant="outline" size="sm" onClick={() => handleShortcutPayment(100, 'Income Tax')}>Income Tax ($100)</Button>
-                <Button variant="outline" size="sm" onClick={() => handleShortcutPayment(200, 'Luxury Tax')}>Luxury Tax ($200)</Button>
-            </div>
-        </div>
-        <Separator />
+        
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <p className="font-semibold text-sm text-muted-foreground pt-2">Custom Payment</p>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4">
             <FormField
               control={form.control}
               name="toPlayerId"
@@ -123,6 +114,7 @@ export function PaymentModal({ isOpen, setIsOpen, fromPlayer, allPlayers, gameId
                     field.onChange(value);
                     form.setValue('reasonType', 'manual');
                     form.setValue('reason', '');
+                    form.setValue('amount', '' as unknown as number);
                   }} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
@@ -142,6 +134,18 @@ export function PaymentModal({ isOpen, setIsOpen, fromPlayer, allPlayers, gameId
                 </FormItem>
               )}
             />
+
+            {toPlayerId === 'bank' && (
+               <div className="space-y-3 py-2">
+                  <p className="font-semibold text-sm text-muted-foreground">Bank Payment Shortcuts</p>
+                  <div className="flex flex-wrap gap-2">
+                      <Button type="button" variant="outline" size="sm" onClick={() => handleShortcutPayment(settings.jailFee, 'Jail Fee')}>Jail Fee (${settings.jailFee})</Button>
+                      <Button type="button" variant="outline" size="sm" onClick={() => handleShortcutPayment(100, 'Income Tax')}>Income Tax ($100)</Button>
+                      <Button type="button" variant="outline" size="sm" onClick={() => handleShortcutPayment(200, 'Luxury Tax')}>Luxury Tax ($200)</Button>
+                  </div>
+              </div>
+            )}
+
             <FormField
               control={form.control}
               name="reasonType"
