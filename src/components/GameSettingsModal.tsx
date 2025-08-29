@@ -10,6 +10,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { updateGameSettings } from '@/lib/db';
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from 'lucide-react';
+import { useEffect } from 'react';
 
 interface GameSettingsModalProps {
   isOpen: boolean;
@@ -32,6 +33,12 @@ export function GameSettingsModal({ isOpen, setIsOpen, initialSettings, gameId, 
     defaultValues: initialSettings,
   });
 
+  useEffect(() => {
+    if (isOpen) {
+      form.reset(initialSettings);
+    }
+  }, [isOpen, initialSettings, form]);
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
       await updateGameSettings(gameId, values);
@@ -43,7 +50,7 @@ export function GameSettingsModal({ isOpen, setIsOpen, initialSettings, gameId, 
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => { setIsOpen(open); if(!open) form.reset(initialSettings);}}>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle className="font-headline text-2xl">Customize Game Amounts</DialogTitle>
