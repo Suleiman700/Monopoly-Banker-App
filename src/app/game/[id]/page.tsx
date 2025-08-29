@@ -8,10 +8,18 @@ import { RulesAdvisorTab } from '@/components/RulesAdvisorTab';
 import { OptionsTab } from '@/components/OptionsTab';
 import { getGameById } from '@/lib/db';
 import { Banknote, Dices, BarChart3, HelpCircle, Settings } from 'lucide-react';
+import type { ThemeColors } from '@/lib/types';
 
 interface GamePageProps {
   params: { id: string };
 }
+
+const defaultTheme: ThemeColors = {
+  primary: "180 100% 25%",
+  accent: "204 70% 67%",
+  background: "180 60% 96%",
+};
+
 
 export default async function GamePage({ params }: GamePageProps) {
   const gameId = params.id;
@@ -23,7 +31,7 @@ export default async function GamePage({ params }: GamePageProps) {
 
   // These are passed as initial data to client components
   const { players, transactions, diceRolls, settings } = game;
-  const { theme } = settings;
+  const theme = settings?.theme || defaultTheme;
 
   const themeStyle = `
     :root {
