@@ -55,9 +55,12 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/games ./games
 
-EXPOSE 9002
+EXPOSE 3017
 
-ENV PORT 9002
+ENV PORT 3017
 ENV HOSTNAME 0.0.0.0
 
 CMD ["node", "server.js"]
+
+# docker build -t monopoly-banker-app .
+# docker run -d -p 3017:3000 --restart unless-stopped --name monopoly-banker-app monopoly-banker-app
