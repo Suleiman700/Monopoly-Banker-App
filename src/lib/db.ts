@@ -99,6 +99,11 @@ export async function createGame(
       jailFee: 50,
       passGoAmount: 200,
       freeParkingAmount: 0,
+      theme: {
+        primary: '180 100% 25%',
+        accent: '204 70% 67%',
+        background: '180 60% 96%',
+      }
     },
   };
 
@@ -314,31 +319,23 @@ export async function takeFromAllPlayers(gameId: string, amount: number, reason:
 }
 
 export async function undoTransaction(gameId: string, transactionId: string): Promise<void> {
-    console.log(`[undoTransaction] START: Attempting to undo transaction '${transactionId}' for game '${gameId}'`);
-
     if (!gameId || !transactionId) {
-        console.error('[undoTransaction] ERROR: gameId or transactionId is missing.');
         throw new Error('Game ID and Transaction ID are required.');
     }
 
     const game = await getGameById(gameId);
     if (!game) {
-        console.error(`[undoTransaction] ERROR: Game not found with id '${gameId}'`);
         throw new Error('Game not found');
     }
-    console.log(`[undoTransaction] Found game '${game.id}'`);
 
     const transactionIndex = game.transactions.findIndex(t => t.id === transactionId);
     if (transactionIndex === -1) {
-        console.error(`[undoTransaction] ERROR: Transaction not found with id '${transactionId}' in game '${game.id}'`);
         throw new Error('Transaction not found');
     }
-    console.log(`[undoTransaction] Found transaction at index ${transactionIndex}`);
     
     const transaction = game.transactions[transactionIndex];
     const { fromPlayerId, toPlayerId, amount } = transaction;
 
-    console.log(`[undoTransaction] Reversing transaction: ${amount} from ${fromPlayerId} to ${toPlayerId}`);
 
     // Reverse the balance changes
     const fromPlayer = fromPlayerId === 'bank' ? null : game.players.find(p => p.id === fromPlayerId);
@@ -346,19 +343,15 @@ export async function undoTransaction(gameId: string, transactionId: string): Pr
 
     if (fromPlayer) {
         fromPlayer.balance += amount;
-        console.log(`[undoTransaction] CREDITED ${amount} to fromPlayer '${fromPlayer.id}'. New balance: ${fromPlayer.balance}`);
     }
     if (toPlayer) {
         toPlayer.balance -= amount;
-        console.log(`[undoTransaction] DEBITED ${amount} from toPlayer '${toPlayer.id}'. New balance: ${toPlayer.balance}`);
     }
     
     // Remove the transaction from the history
     game.transactions.splice(transactionIndex, 1);
-    console.log('[undoTransaction] Removed transaction from history.');
 
     await writeGame(game);
-    console.log('[undoTransaction] END: Successfully saved updated game file.');
 }
 
 export async function updateGameSettings(gameId: string, newSettings: Partial<GameSettings>): Promise<Game> {

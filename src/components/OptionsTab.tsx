@@ -6,9 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { deleteGame, resetGame } from '@/lib/db';
 import { useToast } from "@/hooks/use-toast";
-import { Trash2, RefreshCcw, Loader2, Settings2 } from 'lucide-react';
+import { Trash2, RefreshCcw, Loader2, Settings2, Palette } from 'lucide-react';
 import type { GameSettings } from '@/lib/types';
 import { GameSettingsModal } from './GameSettingsModal';
+import { ThemeSelectionModal } from './ThemeSelectionModal';
 
 interface OptionsTabProps {
     gameId: string;
@@ -21,6 +22,7 @@ export function OptionsTab({ gameId, initialSettings }: OptionsTabProps) {
     const [isDeleting, setIsDeleting] = useState(false);
     const [isResetting, setIsResetting] = useState(false);
     const [settingsModalOpen, setSettingsModalOpen] = useState(false);
+    const [themeModalOpen, setThemeModalOpen] = useState(false);
 
     const handleDelete = async () => {
         setIsDeleting(true);
@@ -46,7 +48,7 @@ export function OptionsTab({ gameId, initialSettings }: OptionsTabProps) {
                 description: 'The game has been reset to its initial state.',
             });
             router.refresh();
-        } catch (error) {
+        } catch (error) => {
             toast({ variant: 'destructive', title: 'Error', description: 'Failed to reset the game.' });
         } finally {
             setIsResetting(false);
@@ -56,7 +58,7 @@ export function OptionsTab({ gameId, initialSettings }: OptionsTabProps) {
     const handleSettingsUpdated = () => {
         toast({
             title: 'Settings Saved',
-            description: 'Your new game amounts have been saved.',
+            description: 'Your new settings have been saved.',
         });
         router.refresh();
     }
@@ -79,6 +81,19 @@ export function OptionsTab({ gameId, initialSettings }: OptionsTabProps) {
                         <Button variant="outline" onClick={() => setSettingsModalOpen(true)}>
                             <Settings2 className="mr-2" />
                             Customize
+                        </Button>
+                    </div>
+
+                    <div className="p-4 border rounded-lg flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-secondary/30">
+                        <div>
+                            <h3 className="font-semibold text-lg">Change Theme</h3>
+                            <p className="text-sm text-muted-foreground">
+                                Personalize the look and feel of your game board.
+                            </p>
+                        </div>
+                        <Button variant="outline" onClick={() => setThemeModalOpen(true)}>
+                            <Palette className="mr-2" />
+                            Change Theme
                         </Button>
                     </div>
 
@@ -146,6 +161,13 @@ export function OptionsTab({ gameId, initialSettings }: OptionsTabProps) {
             <GameSettingsModal
                 isOpen={settingsModalOpen}
                 setIsOpen={setSettingsModalOpen}
+                gameId={gameId}
+                initialSettings={initialSettings}
+                onSettingsUpdated={handleSettingsUpdated}
+            />
+            <ThemeSelectionModal
+                isOpen={themeModalOpen}
+                setIsOpen={setThemeModalOpen}
                 gameId={gameId}
                 initialSettings={initialSettings}
                 onSettingsUpdated={handleSettingsUpdated}

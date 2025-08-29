@@ -23,40 +23,52 @@ export default async function GamePage({ params }: GamePageProps) {
 
   // These are passed as initial data to client components
   const { players, transactions, diceRolls, settings } = game;
+  const { theme } = settings;
+
+  const themeStyle = `
+    :root {
+      --primary: ${theme.primary};
+      --accent: ${theme.accent};
+      --background: ${theme.background};
+    }
+  `;
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <Header />
-      <main className="flex-1 container mx-auto p-4 md:p-8">
-        <div className="mb-6">
-            <h1 className="text-3xl md:text-4xl font-headline font-bold text-primary">Game In Progress</h1>
-            <p className="text-muted-foreground font-code text-sm">ID: {game.id}</p>
-        </div>
-        <Tabs defaultValue="bank" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 md:grid-cols-5 h-auto">
-            <TabsTrigger value="bank" className="py-2"><Banknote className="mr-2 h-5 w-5" />Bank</TabsTrigger>
-            <TabsTrigger value="dice" className="py-2"><Dices className="mr-2 h-5 w-5" />Dice</TabsTrigger>
-            <TabsTrigger value="stats" className="py-2"><BarChart3 className="mr-2 h-5 w-5" />Stats</TabsTrigger>
-            <TabsTrigger value="advisor" className="py-2"><HelpCircle className="mr-2 h-5 w-5" />Rules Advisor</TabsTrigger>
-            <TabsTrigger value="options" className="py-2"><Settings className="mr-2 h-5 w-5" />Options</TabsTrigger>
-          </TabsList>
-          <TabsContent value="bank" className="mt-6">
-            <BankTab initialPlayers={players} gameId={gameId} initialSettings={settings} />
-          </TabsContent>
-          <TabsContent value="dice" className="mt-6">
-            <DiceTab gameId={gameId} />
-          </TabsContent>
-          <TabsContent value="stats" className="mt-6">
-            <StatsTab initialTransactions={transactions} players={players} initialDiceRolls={diceRolls} gameId={gameId} />
-          </TabsContent>
-          <TabsContent value="advisor" className="mt-6">
-            <RulesAdvisorTab />
-          </TabsContent>
-          <TabsContent value="options" className="mt-6">
-            <OptionsTab gameId={gameId} initialSettings={settings} />
-          </TabsContent>
-        </Tabs>
-      </main>
-    </div>
+    <>
+      <style>{themeStyle}</style>
+      <div className="flex flex-col min-h-screen">
+        <Header />
+        <main className="flex-1 container mx-auto p-4 md:p-8">
+          <div className="mb-6">
+              <h1 className="text-3xl md:text-4xl font-headline font-bold text-primary">Game In Progress</h1>
+              <p className="text-muted-foreground font-code text-sm">ID: {game.id}</p>
+          </div>
+          <Tabs defaultValue="bank" className="w-full">
+            <TabsList className="grid w-full grid-cols-3 md:grid-cols-5 h-auto">
+              <TabsTrigger value="bank" className="py-2"><Banknote className="mr-2 h-5 w-5" />Bank</TabsTrigger>
+              <TabsTrigger value="dice" className="py-2"><Dices className="mr-2 h-5 w-5" />Dice</TabsTrigger>
+              <TabsTrigger value="stats" className="py-2"><BarChart3 className="mr-2 h-5 w-5" />Stats</TabsTrigger>
+              <TabsTrigger value="advisor" className="py-2"><HelpCircle className="mr-2 h-5 w-5" />Rules Advisor</TabsTrigger>
+              <TabsTrigger value="options" className="py-2"><Settings className="mr-2 h-5 w-5" />Options</TabsTrigger>
+            </TabsList>
+            <TabsContent value="bank" className="mt-6">
+              <BankTab initialPlayers={players} gameId={gameId} initialSettings={settings} />
+            </TabsContent>
+            <TabsContent value="dice" className="mt-6">
+              <DiceTab gameId={gameId} />
+            </TabsContent>
+            <TabsContent value="stats" className="mt-6">
+              <StatsTab initialTransactions={transactions} players={players} initialDiceRolls={diceRolls} gameId={gameId} />
+            </TabsContent>
+            <TabsContent value="advisor" className="mt-6">
+              <RulesAdvisorTab />
+            </TabsContent>
+            <TabsContent value="options" className="mt-6">
+              <OptionsTab gameId={gameId} initialSettings={settings} />
+            </TabsContent>
+          </Tabs>
+        </main>
+      </div>
+    </>
   );
 }

@@ -24,10 +24,17 @@ export interface DiceRoll {
   createdAt: Date;
 }
 
+export interface ThemeColors {
+  primary: string; // HSL value as string "H S% L%"
+  accent: string;
+  background: string;
+}
+
 export interface GameSettings {
   jailFee: number;
   passGoAmount: number;
   freeParkingAmount: number;
+  theme: ThemeColors;
 }
 
 export interface Game {
