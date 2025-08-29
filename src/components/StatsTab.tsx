@@ -29,6 +29,7 @@ export function StatsTab({ initialTransactions, players, initialDiceRolls, gameI
     const config = {
       income: { label: 'Income', color: 'hsl(var(--chart-2))' },
       outcome: { label: 'Outcome', color: 'hsl(var(--chart-1))' },
+      rolls: { label: 'Rolls', color: 'hsl(var(--chart-3))' },
     };
     players.forEach((player, index) => {
         const chartNum = (index % 5) + 1;
@@ -84,12 +85,24 @@ export function StatsTab({ initialTransactions, players, initialDiceRolls, gameI
             });
         return history;
     })();
+    
+    const diceRollFrequency = (() => {
+        const counts = new Map<number, number>();
+        for (let i = 2; i <= 12; i++) {
+            counts.set(i, 0);
+        }
+        initialDiceRolls.forEach(roll => {
+            counts.set(roll.total, (counts.get(roll.total) || 0) + 1);
+        });
+        return Array.from(counts.entries()).map(([total, count]) => ({ name: total.toString(), rolls: count }));
+    })();
 
     return {
         passGoCount,
         jailCount,
         incomeOutcome,
         balanceHistory,
+        diceRollFrequency,
         filteredTransactions: transactions.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
         totalMoneySpent: initialTransactions.reduce((sum, t) => sum + t.amount, 0),
         numberOfRounds: players.length > 0 ? Math.floor(initialDiceRolls.length / players.length) : 0,
@@ -156,8 +169,8 @@ export function StatsTab({ initialTransactions, players, initialDiceRolls, gameI
         </Card>
       </div>
 
-       <div className="grid gap-6 md:grid-cols-2">
-         <Card>
+       <div className="grid gap-6 lg:grid-cols-3">
+         <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle className="font-headline">Player Balances Over Time</CardTitle>
             <CardDescription>How player wealth has changed during the game.</CardDescription>
@@ -183,26 +196,48 @@ export function StatsTab({ initialTransactions, players, initialDiceRolls, gameI
 
         <Card>
            <CardHeader>
-            <CardTitle className="font-headline">Income vs. Outcome</CardTitle>
-            <CardDescription>Total money received vs. money spent by each player.</CardDescription>
+            <CardTitle className="font-headline">Dice Roll Frequency</CardTitle>
+            <CardDescription>How many times each total has been rolled.</CardDescription>
           </CardHeader>
           <CardContent>
              <ChartContainer config={chartConfig} className="h-[300px] w-full">
                <ResponsiveContainer>
-                  <BarChart data={filteredData.incomeOutcome} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+                  <BarChart data={filteredData.diceRollFrequency} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="name" />
-                      <YAxis />
+                      <YAxis allowDecimals={false} />
                       <Tooltip content={<ChartTooltipContent indicator="dot" />} />
                       <Legend content={<ChartLegendContent />} />
-                      <Bar dataKey="income" fill={chartConfig.income.color} radius={4} />
-                      <Bar dataKey="outcome" fill={chartConfig.outcome.color} radius={4} />
+                      <Bar dataKey="rolls" fill={chartConfig.rolls.color} radius={4} />
                   </BarChart>
                 </ResponsiveContainer>
             </ChartContainer>
           </CardContent>
         </Card>
        </div>
+       
+      <Card>
+        <CardHeader>
+            <CardTitle className="font-headline">Income vs. Outcome</CardTitle>
+            <CardDescription>Total money received vs. money spent by each player.</CardDescription>
+        </CardHeader>
+        <CardContent>
+            <ChartContainer config={chartConfig} className="h-[300px] w-full">
+            <ResponsiveContainer>
+                <BarChart data={filteredData.incomeOutcome} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip content={<ChartTooltipContent indicator="dot" />} />
+                    <Legend content={<ChartLegendContent />} />
+                    <Bar dataKey="income" fill={chartConfig.income.color} radius={4} />
+                    <Bar dataKey="outcome" fill={chartConfig.outcome.color} radius={4} />
+                </BarChart>
+                </ResponsiveContainer>
+            </ChartContainer>
+        </CardContent>
+      </Card>
+
 
       <Card>
         <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
