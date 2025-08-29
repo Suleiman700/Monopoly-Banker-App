@@ -2,6 +2,8 @@
 
 Banker's Best Friend is a modern, web-based application designed to be the ultimate companion for your Monopoly game nights. It replaces the need for paper money and a manual banker with a seamless digital interface, and enhances the experience with powerful AI-driven features.
 
+<img src="/public/images/thumbnail.png" alt="drawing" width="200"/>
+
 ## Key Features
 
 - **Digital Banking:** Easily manage balances for all players and the bank. No more fumbling with paper money!
