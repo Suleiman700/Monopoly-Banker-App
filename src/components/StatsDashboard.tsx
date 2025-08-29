@@ -63,33 +63,42 @@ export function StatsDashboard({ initialTransactions, players, gameId, initialDi
   }, [transactions, diceRolls]);
 
   const playerBalanceTimeline = useMemo(() => {
-    const timeline: { round: number, [playerName: string]: number }[] = [];
+    const timeline: { transaction: number, [playerName: string]: number }[] = [];
     const playerBalances: { [playerId: string]: number } = {};
     const playerColors: { [playerName: string]: string } = {};
     const chartPlayerConfig: any = {};
-
+  
+    // Initialize balances and chart config for all players first
     players.forEach((p, i) => {
       playerBalances[p.id] = initialSettings.startingBalance;
       const color = `hsl(var(--chart-${(i % 5) + 1}))`;
       playerColors[p.name] = color;
       chartPlayerConfig[p.name] = { label: p.name, color };
     });
-
+  
+    // Set the initial state at transaction 0
+    const initialBalances = players.reduce((acc, p) => ({ ...acc, [p.name]: playerBalances[p.id] }), {});
     timeline.push({
-      round: 0,
-      ...players.reduce((acc, p) => ({ ...acc, [p.name]: playerBalances[p.id] }), {})
+      transaction: 0,
+      ...initialBalances
     });
     
-    transactions.forEach((t, i) => {
+    // Process transactions chronologically
+    const sortedTransactions = [...transactions].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+
+    sortedTransactions.forEach((t, i) => {
+        // These balances are guaranteed to exist from the initialization loop
         if (t.fromPlayerId !== 'bank') {
             playerBalances[t.fromPlayerId] -= t.amount;
         }
         if (t.toPlayerId !== 'bank') {
             playerBalances[t.toPlayerId] += t.amount;
         }
+
+        const currentBalances = players.reduce((acc, p) => ({ ...acc, [p.name]: playerBalances[p.id] }), {});
         timeline.push({
-            round: i + 1,
-            ...players.reduce((acc, p) => ({ ...acc, [p.name]: playerBalances[p.id] }), {})
+            transaction: i + 1,
+            ...currentBalances
         });
     });
 
@@ -174,7 +183,7 @@ export function StatsDashboard({ initialTransactions, players, gameId, initialDi
               <ResponsiveContainer>
                 <LineChart data={playerBalanceTimeline.data}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="round" type="number" allowDecimals={false} />
+                  <XAxis dataKey="transaction" type="number" allowDecimals={false} />
                   <YAxis />
                   <Tooltip content={<ChartTooltipContent indicator="dot" />} />
                   <Legend />
