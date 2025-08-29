@@ -36,7 +36,7 @@ export function DiceTab({ gameId }: { gameId: string }) {
     setTotal(null);
     
     // Simulate rolling animation
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise(resolve => setTimeout(resolve, 50));
     
     const date = new Date();
     const seconds = date.getSeconds();
