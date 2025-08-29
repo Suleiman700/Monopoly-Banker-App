@@ -1,6 +1,6 @@
 # Banker's Best Friend: Your AI-Powered Monopoly Assistant
 
-Banker's Best Friend is a modern, web-based application designed to be the ultimate companion for your Monopoly game nights. It replaces the need for paper money and a manual banker with a seamless digital interface, and enhances the experience with powerful AI-driven features.
+Monopoly Banker App is a modern, web-based application designed to be the ultimate companion for your Monopoly game nights. It replaces the need for paper money and a manual banker with a seamless digital interface, and enhances the experience with powerful AI-driven features.
 
 <img src="/public/images/thumbnail.png" alt="drawing" width="400"/>
 <img width="200" height="811" alt="chrome_KY8iw4wQmf" src="https://github.com/user-attachments/assets/6495eb06-e00d-4c9d-9424-a37f2fbae74d" />
