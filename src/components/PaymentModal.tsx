@@ -32,7 +32,7 @@ export function PaymentModal({ isOpen, setIsOpen, fromPlayer, allPlayers, gameId
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      amount: undefined,
+      amount: '' as unknown as number,
       toPlayerId: undefined,
       reason: '',
     }
@@ -126,7 +126,7 @@ export function PaymentModal({ isOpen, setIsOpen, fromPlayer, allPlayers, gameId
                 <FormItem>
                   <FormLabel>Amount</FormLabel>
                   <FormControl>
-                    <Input type="number" placeholder="e.g., 200" {...field} />
+                    <Input type="number" placeholder="e.g., 200" {...field} onChange={(e) => field.onChange(e.target.valueAsNumber)} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

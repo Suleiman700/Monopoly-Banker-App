@@ -28,7 +28,7 @@ export function MassPaymentModal({ isOpen, setIsOpen, gameId, onSuccess, type }:
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      amount: undefined,
+      amount: '' as unknown as number,
       reason: '',
     }
   });
@@ -74,7 +74,7 @@ export function MassPaymentModal({ isOpen, setIsOpen, gameId, onSuccess, type }:
                 <FormItem>
                   <FormLabel>Amount</FormLabel>
                   <FormControl>
-                    <Input type="number" placeholder="e.g., 100" {...field} />
+                    <Input type="number" placeholder="e.g., 100" {...field} onChange={(e) => field.onChange(e.target.valueAsNumber)} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
